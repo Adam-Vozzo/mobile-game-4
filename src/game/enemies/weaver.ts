@@ -83,6 +83,10 @@ export class Weavers {
     this.pool.releaseAt(i);
   }
 
+  releaseAll(): void {
+    for (let i = this.pool.size - 1; i >= 0; i--) this.releaseAt(i);
+  }
+
   get count(): number {
     return this.pool.size;
   }

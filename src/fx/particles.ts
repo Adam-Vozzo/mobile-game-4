@@ -114,6 +114,15 @@ export class ParticleSystem {
     }
   }
 
+  /** Instantly retire all active particles (e.g. on retry). */
+  clear(): void {
+    for (let i = this.pool.size - 1; i >= 0; i--) {
+      const p = this.pool.items[i]!;
+      p.sprite.visible = false;
+      this.pool.releaseAt(i);
+    }
+  }
+
   /** For test/diag — number of particles ready to spawn without exhaustion. */
   get free(): number {
     return this.pool.free;

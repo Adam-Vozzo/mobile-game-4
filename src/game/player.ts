@@ -12,6 +12,8 @@ export interface PlayerState {
   facing: number;
   fireCooldown: number;
   alive: boolean;
+  /** true during invincibility blink — suppresses rendering without affecting collision */
+  blink: boolean;
 }
 
 export class Player {
@@ -27,6 +29,7 @@ export class Player {
       facing: 0,
       fireCooldown: 0,
       alive: true,
+      blink: false,
     };
     this.g = new Graphics();
     this.g.blendMode = BLEND_MODES.ADD;
@@ -81,10 +84,21 @@ export class Player {
     return true;
   }
 
+  reset(x: number, y: number): void {
+    this.state.x = x;
+    this.state.y = y;
+    this.state.vx = 0;
+    this.state.vy = 0;
+    this.state.facing = 0;
+    this.state.fireCooldown = 0;
+    this.state.alive = true;
+    this.state.blink = false;
+  }
+
   render(): void {
     this.g.x = this.state.x;
     this.g.y = this.state.y;
     this.g.rotation = this.state.facing;
-    this.g.visible = this.state.alive;
+    this.g.visible = this.state.alive && !this.state.blink;
   }
 }

@@ -17,22 +17,27 @@ import { length } from '../engine/math';
 
 const SHAKE_DECAY = 8;
 
-// Slow-mo constants — not user-tweakable yet; the toggle is the knob.
 const SLOW_MO_SCALE = 0.15;
-const SLOW_MO_DURATION = 1.5; // seconds
+const SLOW_MO_DURATION = 1.5;
 const SLOW_MO_MULT_THRESHOLD = 5;
 
-// Flash constants — feel-tuned; intensity controlled by the screenFlash toggle.
-const FLASH_KILL_COLOR = 0xff2bd6; // magenta, matches wanderer
+const FLASH_KILL_COLOR = 0xff2bd6;
 const FLASH_KILL_ALPHA = 0.35;
 const FLASH_KILL_DURATION = 0.15;
 
-const FLASH_GRUNT_COLOR = 0xff7700; // orange, matches grunt
-const FLASH_WEAVER_COLOR = 0xaaff00; // lime, matches weaver
+const FLASH_GRUNT_COLOR = 0xff7700;
+const FLASH_WEAVER_COLOR = 0xaaff00;
 
-const FLASH_HIT_COLOR = 0xffffff; // white — "ow"
+const FLASH_HIT_COLOR = 0xffffff;
 const FLASH_HIT_ALPHA = 0.55;
 const FLASH_HIT_DURATION = 0.3;
+
+const INVINC_DURATION = 2.0;
+const INVINC_BLINK_PERIOD = 0.12;
+const DEATH_CAM_DURATION = 1.5;
+const DEATH_CAM_SCALE = 0.06;
+
+type GameState = 'playing' | 'dying' | 'over';
 
 export class World {
   readonly renderer: RendererBundle;
@@ -45,15 +50,19 @@ export class World {
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
   readonly score = new ScoreState();
+
+  lives: number = config.flow.startingLives;
+  private gameState: GameState = 'playing';
+
   private spawnTimer = 0.5;
   private shakeAmp = 0;
   private shakeOffsetX = 0;
   private shakeOffsetY = 0;
-  // Hitstop: number of fixed sim-frames remaining where simulation is frozen.
   private hitstopFrames = 0;
-  // Slow-mo: time scale applied to all simulation dt; timer uses real dt.
   private timeScale = 1;
   private slowMoTimer = 0;
+  private invincTimer = 0;
+  private deathCamTimer = 0;
 
   constructor(renderer: RendererBundle) {
     this.renderer = renderer;
@@ -72,14 +81,62 @@ export class World {
     this.flash = new ScreenFlash(renderer.layers.overlay);
   }
 
-  /** Convenience for tests / smoke. */
   entityCount(): number {
     return 1 + this.bullets.count + this.wanderers.count + this.grunts.count + this.weavers.count;
   }
 
+  get isOver(): boolean {
+    return this.gameState === 'over';
+  }
+
+  reset(): void {
+    this.lives = config.flow.startingLives;
+    this.gameState = 'playing';
+    this.invincTimer = 0;
+    this.deathCamTimer = 0;
+    this.timeScale = 1;
+    this.slowMoTimer = 0;
+    this.hitstopFrames = 0;
+    this.spawnTimer = 0.5;
+    this.shakeAmp = 0;
+    this.shakeOffsetX = 0;
+    this.shakeOffsetY = 0;
+    this.score.reset();
+    this.player.reset(this.renderer.viewport.halfW, this.renderer.viewport.halfH);
+    this.wanderers.releaseAll();
+    this.grunts.releaseAll();
+    this.weavers.releaseAll();
+    this.bullets.releaseAll();
+    this.particles.clear();
+    this.flash.clear();
+    this.renderer.app.stage.position.set(0, 0);
+  }
+
   step(dt: number, controls: ControlsDispatcher, input: InputState): void {
-    // Hitstop: freeze simulation for N fixed-step frames, but keep shake and
-    // flash ticking so they feel responsive even during the freeze.
+    // Death cam: simulation trickles in slow-mo, then freezes.
+    if (this.gameState === 'dying') {
+      this.deathCamTimer -= dt;
+      if (this.deathCamTimer <= 0) {
+        this.gameState = 'over';
+        const bestScore = ScoreState.saveBestScore(this.score.score);
+        events.emit('gameOver', {
+          score: this.score.score,
+          bestScore,
+          peakMultiplier: this.score.peakMultiplier,
+        });
+      }
+      // Keep particles/grid/flash ticking at death-cam speed.
+      const ddt = dt * DEATH_CAM_SCALE;
+      this.particles.step(ddt);
+      this.grid.step(ddt);
+      this.decayShake(dt);
+      this.flash.step(dt);
+      return;
+    }
+
+    if (this.gameState === 'over') return;
+
+    // Hitstop.
     if (this.hitstopFrames > 0) {
       this.hitstopFrames--;
       this.decayShake(dt);
@@ -87,9 +144,20 @@ export class World {
       return;
     }
 
-    // Slow-mo: lerp timeScale back to 1 when the timer expires.
+    // Invincibility blink (uses real dt so the window is wall-clock).
+    if (this.invincTimer > 0) {
+      this.invincTimer -= dt;
+      const blinkPhase = Math.floor(this.invincTimer / INVINC_BLINK_PERIOD);
+      this.player.state.blink = blinkPhase % 2 === 0;
+      if (this.invincTimer <= 0) {
+        this.invincTimer = 0;
+        this.player.state.blink = false;
+      }
+    }
+
+    // Slow-mo.
     if (this.slowMoTimer > 0) {
-      this.slowMoTimer -= dt; // real dt — timer expires on wall-clock schedule
+      this.slowMoTimer -= dt;
       if (this.slowMoTimer <= 0) {
         this.slowMoTimer = 0;
         this.timeScale = 1;
@@ -100,12 +168,10 @@ export class World {
     const w = this.renderer.viewport.width;
     const h = this.renderer.viewport.height;
 
-    // Input → player
     controls.read(input);
     this.player.applyMove(sdt, input.moveX, input.moveY);
     this.player.clampToWorld(w, h);
 
-    // Auto-aim: pick nearest enemy across all active enemy types.
     const ps = this.player.state;
     let nx = 0,
       ny = 0,
@@ -132,7 +198,6 @@ export class World {
     if (input.hasAim) {
       this.player.setFacing(Math.atan2(input.aimY, input.aimX));
     } else if (hasTarget) {
-      // Smooth turn for legibility — full snap would feel rigid.
       const target = Math.atan2(ny, nx);
       const cur = ps.facing;
       let diff = target - cur;
@@ -141,13 +206,11 @@ export class World {
       const k = config.controls.autoAimStrength;
       this.player.setFacing(cur + diff * Math.min(1, 18 * sdt * k));
     } else {
-      // No targets — face by velocity if moving, else hold.
       if (Math.abs(ps.vx) + Math.abs(ps.vy) > 1) {
         this.player.setFacing(Math.atan2(ps.vy, ps.vx));
       }
     }
 
-    // Fire
     if (this.player.consumeFireTick(sdt, input.fire && (hasTarget || input.hasAim))) {
       const dirx = Math.cos(ps.facing);
       const diry = Math.sin(ps.facing);
@@ -157,18 +220,13 @@ export class World {
       events.emit('shoot', { x: bx, y: by });
     }
 
-    // Enemies
     this.wanderers.step(sdt, w, h);
     this.grunts.step(sdt, w, h, ps.x, ps.y);
     this.weavers.step(sdt, w, h, ps.x, ps.y);
-
-    // Bullets
     this.bullets.step(sdt, w, h);
 
-    // Collisions: bullets/player ↔ all enemies
     this.collide();
 
-    // Spawn director
     this.spawnTimer -= sdt;
     while (this.spawnTimer <= 0) {
       this.spawnTimer +=
@@ -179,31 +237,20 @@ export class World {
       }
     }
 
-    // Particles
     this.particles.step(sdt);
-
-    // Grid: pull around player, step spring-mass
     this.grid.pull(ps.x, ps.y, config.grid.playerInfluence * sdt);
     this.grid.step(sdt);
-
-    // Shake: always uses real dt so recovery speed is time-invariant.
     this.decayShake(dt);
-
-    // Score
     this.score.step(sdt);
-
-    // Flash fade (real dt so flash reads at normal speed even in slow-mo)
     this.flash.step(dt);
   }
 
   render(_alpha: number): void {
     this.player.render();
-    // Camera shake at the stage level.
     this.renderer.app.stage.position.set(this.shakeOffsetX, this.shakeOffsetY);
     this.grid.draw();
   }
 
-  /** Re-layout grid after a viewport change. */
   onResize(): void {
     this.grid.layout(this.renderer.viewport);
   }
@@ -247,7 +294,6 @@ export class World {
     const playerR = config.player.radius;
     const ps = this.player.state;
 
-    // Bullets vs wanderers
     outer_w: for (let bi = this.bullets.count - 1; bi >= 0; bi--) {
       const b = this.bullets.pool.items[bi]!;
       for (let ei = this.wanderers.count - 1; ei >= 0; ei--) {
@@ -282,8 +328,8 @@ export class World {
       }
     }
 
-    // Player vs all enemies
-    if (ps.alive) {
+    // Skip player collision during invincibility window.
+    if (ps.alive && this.invincTimer <= 0) {
       for (let ei = this.wanderers.count - 1; ei >= 0; ei--) {
         const e = this.wanderers.pool.items[ei]!;
         const dx = e.x - ps.x; const dy = e.y - ps.y;
@@ -321,33 +367,21 @@ export class World {
     const cfg = config.enemies.wanderer;
     this.wanderers.releaseAt(i);
     this.score.onKill(cfg.pointValue);
-
-    // Particle burst — magenta into white core for the hot edge.
     this.particles.burst(x, y, config.juice.particlesPerKill, 0xff2bd6, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.4), 0xffffff, 1.4, 0.6);
-    // Grid kick
     this.grid.push(x, y, config.grid.explosionInfluence, config.grid.influenceRadius);
-    // Shake
     this.shakeAmp = Math.max(this.shakeAmp, 6 * config.juice.screenShakeIntensity);
-
-    // Screen flash
     if (config.juice.screenFlash) {
       this.flash.flash(FLASH_KILL_COLOR, FLASH_KILL_ALPHA, FLASH_KILL_DURATION);
     }
-
-    // Hitstop — convert ms → fixed sim frames (SIM_DT is in seconds).
     if (config.juice.hitstopMs > 0) {
       const frames = Math.max(1, Math.round(config.juice.hitstopMs / (TIMING.SIM_DT * 1000)));
-      // Only extend hitstop, never shorten an existing one.
       this.hitstopFrames = Math.max(this.hitstopFrames, frames);
     }
-
-    // Slow-mo on big-kill (multiplier already updated by score.onKill above).
     if (config.juice.slowMoOnBigKill && this.score.multiplier >= SLOW_MO_MULT_THRESHOLD) {
       this.timeScale = SLOW_MO_SCALE;
       this.slowMoTimer = SLOW_MO_DURATION;
     }
-
     events.emit('kill', { x, y, r: 1, g: 0.17, b: 0.84, pointValue: cfg.pointValue });
   }
 
@@ -355,7 +389,6 @@ export class World {
     const cfg = config.enemies.grunt;
     this.grunts.releaseAt(i);
     this.score.onKill(cfg.pointValue);
-    // Orange particles — heavier burst matching the grunt's bulk
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.3), 0xff7700, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.4), 0xffffff, 1.5, 0.7);
     this.grid.push(x, y, config.grid.explosionInfluence * 1.3, config.grid.influenceRadius * 1.1);
@@ -378,7 +411,6 @@ export class World {
     const cfg = config.enemies.weaver;
     this.weavers.releaseAt(i);
     this.score.onKill(cfg.pointValue);
-    // Lime particles — nimble, snappy burst
     this.particles.burst(x, y, config.juice.particlesPerKill, 0xaaff00, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.3), 0xffffff, 1.6, 0.5);
     this.grid.push(x, y, config.grid.explosionInfluence * 0.9, config.grid.influenceRadius);
@@ -397,28 +429,41 @@ export class World {
     events.emit('kill', { x, y, r: 0.67, g: 1, b: 0, pointValue: cfg.pointValue });
   }
 
-  private onPlayerHit(x: number, y: number): void {
-    // Slice behaviour: reset score, knock player to centre. Real lives /
-    // game-over flow comes in iteration ≥3.
-    this.score.reset();
+  private onPlayerHit(ex: number, ey: number): void {
+    this.lives--;
     const ps = this.player.state;
+
+    // Kick multiplier, keep score.
+    this.score.resetMultiplier();
+
     ps.vx = 0;
     ps.vy = 0;
     ps.x = this.renderer.viewport.halfW;
     ps.y = this.renderer.viewport.halfH;
-    this.particles.burst(x, y, 200, 0xffffff, 1.2, 1.2);
-    this.grid.push(x, y, config.grid.explosionInfluence * 1.5, config.grid.influenceRadius * 1.4);
-    this.shakeAmp = Math.max(this.shakeAmp, 14 * config.juice.screenShakeIntensity);
 
-    // Screen flash — white/intense to signal danger.
+    this.particles.burst(ex, ey, 200, 0xffffff, 1.2, 1.2);
+    this.grid.push(ex, ey, config.grid.explosionInfluence * 1.5, config.grid.influenceRadius * 1.4);
+    this.shakeAmp = Math.max(this.shakeAmp, 14 * config.juice.screenShakeIntensity);
     if (config.juice.screenFlash) {
       this.flash.flash(FLASH_HIT_COLOR, FLASH_HIT_ALPHA, FLASH_HIT_DURATION);
     }
-
-    // Cancel any slow-mo; player-hit resets momentum.
     this.timeScale = 1;
     this.slowMoTimer = 0;
+    events.emit('playerHit', { x: ex, y: ey });
 
-    events.emit('playerHit', { x, y });
+    if (this.lives <= 0) {
+      // Last life — trigger dramatic death cam.
+      ps.alive = false;
+      this.gameState = 'dying';
+      this.deathCamTimer = DEATH_CAM_DURATION;
+      this.shakeAmp = Math.max(this.shakeAmp, 28 * config.juice.screenShakeIntensity);
+      this.particles.burst(ps.x, ps.y, 500, 0xffffff, 2.0, 1.5);
+      this.particles.burst(ps.x, ps.y, 300, 0x00fff7, 1.5, 1.2);
+      if (config.juice.screenFlash) {
+        this.flash.flash(FLASH_HIT_COLOR, 0.85, 0.6);
+      }
+    } else {
+      this.invincTimer = INVINC_DURATION;
+    }
   }
 }

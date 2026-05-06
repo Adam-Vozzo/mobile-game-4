@@ -6,11 +6,13 @@ export class HUD {
   private root: HTMLElement;
   private scoreEl: HTMLElement;
   private multEl: HTMLElement;
+  private livesEl: HTMLElement;
   private perfEl: HTMLElement;
   private particleCounter: () => number = () => 0;
   private entityCounter: () => number = () => 0;
   private lastScore = -1;
   private lastMult = -1;
+  private lastLives = -1;
 
   constructor(host: HTMLElement) {
     this.root = document.createElement('div');
@@ -19,6 +21,7 @@ export class HUD {
       <div class="hud-row hud-top-left">
         <span class="hud-label">Score</span>
         <span class="hud-value" id="hud-score">0</span>
+        <span class="hud-lives" id="hud-lives"></span>
       </div>
       <div class="hud-row hud-top-right">
         <span class="hud-label">Mult</span>
@@ -30,6 +33,7 @@ export class HUD {
     host.appendChild(this.root);
     this.scoreEl = this.root.querySelector('#hud-score') as HTMLElement;
     this.multEl = this.root.querySelector('#hud-mult') as HTMLElement;
+    this.livesEl = this.root.querySelector('#hud-lives') as HTMLElement;
     this.perfEl = this.root.querySelector('#hud-perf') as HTMLElement;
   }
 
@@ -38,7 +42,7 @@ export class HUD {
     this.entityCounter = entities;
   }
 
-  update(score: ScoreState, frame: FrameInfo | null): void {
+  update(score: ScoreState, frame: FrameInfo | null, lives = 3): void {
     if (score.score !== this.lastScore) {
       this.scoreEl.textContent = formatScore(score.score);
       this.lastScore = score.score;
@@ -46,6 +50,10 @@ export class HUD {
     if (score.multiplier !== this.lastMult) {
       this.multEl.textContent = `x${score.multiplier}`;
       this.lastMult = score.multiplier;
+    }
+    if (lives !== this.lastLives) {
+      this.livesEl.innerHTML = renderLives(lives);
+      this.lastLives = lives;
     }
     const showPerf =
       config.debug.fpsOverlay ||
@@ -73,6 +81,17 @@ export class HUD {
 }
 
 function formatScore(n: number): string {
-  // Tabular grouping — every 3 digits, no commas (cleaner on small HUD).
   return Math.floor(n).toString().padStart(7, '0');
+}
+
+function renderLives(lives: number): string {
+  const max = 3;
+  const filled = Math.max(0, Math.min(lives, max));
+  let html = '';
+  for (let i = 0; i < max; i++) {
+    html += i < filled
+      ? '<span class="life-pip life-pip--on">◆</span>'
+      : '<span class="life-pip life-pip--off">◆</span>';
+  }
+  return html;
 }

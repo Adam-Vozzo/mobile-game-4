@@ -19,6 +19,9 @@ change.
   Grunt (heavy charger, orange) and Weaver (sinusoidal homing, lime) added
   behind `flow.newEnemyTypes` experimental toggle. Auto-aim updated to target
   all enemy types.
+- **Iteration 6: Game-over flow.** ✅ Landed in v0.6.0. Lives system (3 lives),
+  invincibility window, death cam, score panel with best-score persistence,
+  retry. Score accumulates across lives; only multiplier resets on hit.
 
 ## Next
 
@@ -28,8 +31,6 @@ change.
 - 2–4 more enemy types: Snake (chains of segments), Black Hole (gravity well),
   Pinwheel (orbiting drones), Splitter (splits on death).
 - Spawn director: wave logic + tension curve.
-- Game-over flow: death cam, score panel, retry.
-- Score persistence (best score local).
 - Main menu shell.
 
 ## Later

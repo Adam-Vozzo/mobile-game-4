@@ -1,5 +1,7 @@
 import { config } from '../config';
 
+const BEST_SCORE_KEY = 'neonDrift.bestScore';
+
 /**
  * Score + chained-kill multiplier.
  *
@@ -10,13 +12,23 @@ import { config } from '../config';
 export class ScoreState {
   score = 0;
   multiplier = 1;
+  peakMultiplier = 1;
   /** ms since last kill */
   private sinceKillMs = 9999;
   /** raw decimal multiplier; integer multiplier shown to player */
   private mulRaw = 1;
 
+  /** Full reset — use on game-over / retry. */
   reset(): void {
     this.score = 0;
+    this.multiplier = 1;
+    this.peakMultiplier = 1;
+    this.mulRaw = 1;
+    this.sinceKillMs = 9999;
+  }
+
+  /** Multiplier-only reset — use on player hit (score survives between lives). */
+  resetMultiplier(): void {
     this.multiplier = 1;
     this.mulRaw = 1;
     this.sinceKillMs = 9999;
@@ -26,14 +38,10 @@ export class ScoreState {
     const cfg = config.score.multiplier;
     if (this.sinceKillMs <= cfg.windowMs) {
       this.mulRaw = Math.min(cfg.max, this.mulRaw + 1);
-    } else {
-      // Outside the chain window — keep the raw value, just reset chain timer.
-      // (Some prior versions reset to 1; keeping current value preserves
-      // earned multiplier on a clean re-engagement and feels less punishing.
-      // Pure decay handles the punishment instead.)
     }
     this.sinceKillMs = 0;
     this.multiplier = Math.floor(this.mulRaw);
+    if (this.multiplier > this.peakMultiplier) this.peakMultiplier = this.multiplier;
     this.score += pointValue * this.multiplier;
   }
 
@@ -46,5 +54,23 @@ export class ScoreState {
       if (this.mulRaw < 1) this.mulRaw = 1;
       this.multiplier = Math.floor(this.mulRaw);
     }
+  }
+
+  static loadBestScore(): number {
+    try {
+      return parseInt(localStorage.getItem(BEST_SCORE_KEY) ?? '0', 10) || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /** Saves score if it's a new best. Returns the new best. */
+  static saveBestScore(score: number): number {
+    const prev = ScoreState.loadBestScore();
+    const best = Math.max(prev, Math.floor(score));
+    try {
+      localStorage.setItem(BEST_SCORE_KEY, String(best));
+    } catch { /* quota exceeded or private mode */ }
+    return best;
   }
 }
