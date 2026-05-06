@@ -151,7 +151,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.5.0',
+  buildVersion: '0.6.0',
 
   world: {
     width: 1600,

@@ -37,4 +37,9 @@ export class ScreenFlash {
     this.alpha = Math.max(0, this.alpha - this.decayRate * dt);
     this.g.alpha = this.alpha;
   }
+
+  clear(): void {
+    this.alpha = 0;
+    this.g.alpha = 0;
+  }
 }

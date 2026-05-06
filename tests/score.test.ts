@@ -59,4 +59,27 @@ describe('game/score', () => {
     expect(s.score).toBe(0);
     expect(s.multiplier).toBe(1);
   });
+
+  it('tracks peakMultiplier across kills', () => {
+    const s = new ScoreState();
+    s.onKill(1);
+    s.step(0.1);
+    s.onKill(1); // mult 2
+    s.step(0.1);
+    s.onKill(1); // mult 3
+    expect(s.peakMultiplier).toBe(3);
+    s.step(3); // decay to 1
+    expect(s.peakMultiplier).toBe(3); // peak preserved
+  });
+
+  it('resetMultiplier keeps score but resets multiplier', () => {
+    const s = new ScoreState();
+    s.onKill(10);
+    s.step(0.1);
+    s.onKill(10); // score = 10 + 20 = 30, mult = 2
+    expect(s.score).toBe(30);
+    s.resetMultiplier();
+    expect(s.multiplier).toBe(1);
+    expect(s.score).toBe(30); // score preserved
+  });
 });

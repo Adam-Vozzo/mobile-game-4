@@ -97,6 +97,27 @@ canvas {
     0 0 16px rgba(255, 43, 214, 0.5);
 }
 
+.hud-lives {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.life-pip {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.life-pip--on {
+  color: #00fff7;
+  text-shadow: 0 0 8px #00fff7, 0 0 20px rgba(0, 255, 247, 0.6);
+}
+
+.life-pip--off {
+  color: rgba(0, 255, 247, 0.15);
+  text-shadow: none;
+}
+
 .hud-perf {
   position: absolute;
   bottom: env(safe-area-inset-bottom, 0);
@@ -386,4 +407,128 @@ canvas {
   cursor: pointer;
   user-select: none;
   font-family: 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* ─── Game-over overlay ─────────────────────────────────────────────── */
+
+#game-over {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 200;
+  pointer-events: auto;
+  animation: go-fade-in 0.4s ease-out both;
+}
+
+@keyframes go-fade-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.go-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 40px 48px;
+  border: 1px solid rgba(0, 255, 247, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 40px rgba(0, 255, 247, 0.08),
+    inset 0 0 60px rgba(0, 0, 0, 0.6);
+}
+
+.go-title {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  color: #ff2bd6;
+  text-shadow:
+    0 0 12px #ff2bd6,
+    0 0 32px rgba(255, 43, 214, 0.5),
+    0 0 60px rgba(255, 43, 214, 0.25);
+  text-transform: uppercase;
+}
+
+.go-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.go-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.go-label {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(0, 255, 247, 0.5);
+  text-transform: uppercase;
+  min-width: 90px;
+}
+
+.go-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-feature-settings: 'tnum';
+  color: #fff;
+  text-shadow:
+    0 0 6px #00fff7,
+    0 0 16px rgba(0, 255, 247, 0.5);
+}
+
+.go-peak {
+  color: #ff2bd6;
+  text-shadow:
+    0 0 6px #ff2bd6,
+    0 0 16px rgba(255, 43, 214, 0.5);
+}
+
+.go-new-best {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #ffff66;
+  text-shadow: 0 0 8px #ffff66;
+  text-transform: uppercase;
+  animation: go-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes go-pulse {
+  from { opacity: 0.7; }
+  to   { opacity: 1; }
+}
+
+.go-retry {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 247, 0.6);
+  color: #00fff7;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 14px 40px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+}
+
+.go-retry:hover,
+.go-retry:focus-visible {
+  background: rgba(0, 255, 247, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 247, 0.25);
+  outline: none;
+}
+
+.go-retry:active {
+  background: rgba(0, 255, 247, 0.2);
 }

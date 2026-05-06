@@ -24,10 +24,17 @@ export interface ShootEvent {
   y: number;
 }
 
+export interface GameOverEvent {
+  score: number;
+  bestScore: number;
+  peakMultiplier: number;
+}
+
 export interface GameEvents {
   kill: KillEvent;
   playerHit: PlayerHitEvent;
   shoot: ShootEvent;
+  gameOver: GameOverEvent;
 }
 
 type Handler<E> = (e: E) => void;

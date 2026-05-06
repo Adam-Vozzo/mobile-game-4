@@ -13,6 +13,8 @@ import { applyOverlay, loadOverlay } from './tweaks/state';
 import { buildRegistry } from './tweaks/registry';
 import { FourFingerTap } from './tweaks/gesture';
 import { audioBus } from './audio/bus';
+import { GameOverOverlay } from './ui/game-over';
+import { events } from './engine/events';
 
 function makeScheme(s: ControlScheme): ControlSchemeImpl {
   switch (s) {
@@ -47,12 +49,22 @@ async function main(): Promise<void> {
   renderer.app.renderer.on('resize', () => world.onResize());
   window.addEventListener('orientationchange', () => world.onResize());
 
+  const gameOver = new GameOverOverlay(host, () => {
+    world.reset();
+    loop.setPaused(false);
+  });
+
+  events.on('gameOver', (e) => {
+    // Small delay so the death-cam particles can be appreciated.
+    setTimeout(() => gameOver.show(e.score, e.bestScore, e.peakMultiplier), 600);
+  });
+
   let lastFrame: import('./engine/loop').FrameInfo | null = null;
   const loop = new Loop({
     step: (dt) => world.step(dt, controls, input),
     render: (alpha) => {
       world.render(alpha);
-      hud.update(world.score, lastFrame);
+      hud.update(world.score, lastFrame, world.lives);
     },
     onFrame: (info) => {
       lastFrame = info;

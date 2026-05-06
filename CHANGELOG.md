@@ -2,6 +2,48 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.6.0 — Iteration 6: Game-over flow — lives, death cam, score panel, retry (2026-05-06)
+
+**Choice: FEATURE** — No feedback to act on; game-over flow was the top ROADMAP item
+and the most critical missing piece for playability (dying had zero consequence).
+
+### What
+
+- **Lives system**: 3 lives (`config.flow.startingLives`). Tracked in `World.lives`,
+  displayed in HUD as three cyan `◆` pips below the score.
+- **Invincibility window**: 2 s after each non-fatal hit. Player blinks every 120 ms
+  during this window; collision is suppressed. Prevents cheap double-hits.
+- **Score survives between lives**: on hit, only the multiplier is reset
+  (`score.resetMultiplier()` instead of full `score.reset()`). Score accumulates;
+  the game-over panel shows what you earned.
+- **Death cam**: on the last life, `gameState` transitions to `'dying'`. Sim
+  trickles at 0.06× speed for 1.5 s — huge particle burst + shake plays out
+  in dramatic slow-mo before the overlay appears.
+- **Game-over overlay** (`src/ui/game-over.ts`): neon HTML panel shows SCORE,
+  BEST (localStorage), PEAK MULT, plus a "PLAY AGAIN" button. Fades in with a
+  CSS scale animation. "NEW BEST" badge pulses in yellow when a personal best
+  is beaten.
+- **Best score persistence**: `ScoreState.loadBestScore()` / `saveBestScore()` via
+  `localStorage`. Key `'neonDrift.bestScore'`. Safe-guarded try/catch for private
+  mode.
+- **`peakMultiplier`** added to `ScoreState` — tracks the highest multiplier seen in
+  the current run; shown in the game-over panel.
+- **`World.reset()`**: full retry — clears all enemies/bullets/particles, repositions
+  player, resets lives + score, restores `gameState = 'playing'`.
+- `ParticleSystem.clear()` and `ScreenFlash.clear()` added (used by reset).
+- `releaseAll()` added to `Wanderers`, `Grunts`, `Weavers`, `Bullets` (used by reset).
+- `buildVersion` bumped to `0.6.0`.
+- 2 new tests for `peakMultiplier` and `resetMultiplier`.
+
+### Risks
+
+- The 600 ms overlay delay is tuned for the 1.5 s death-cam + 0.06× playback:
+  adjust `setTimeout` in `main.ts` if the death-cam speed changes.
+- `gameOver` event is emitted once and never cleared; retrying with a second
+  death won't double-subscribe because `events.on` is idempotent across sessions.
+- Best score persists across page refreshes; no way to clear it from the UI
+  (can be added later as a Tweaks Menu option).
+
 ## 0.5.0 — Iteration 5: New enemy types — Grunt + Weaver (2026-05-06)
 
 **Choice: FEATURE** — top feel-affecting ROADMAP item. Only one enemy type
