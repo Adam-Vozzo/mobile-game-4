@@ -30,11 +30,18 @@ export interface GameOverEvent {
   peakMultiplier: number;
 }
 
+export interface MusicBeatEvent {
+  /** true = kick (downbeat), false = snare (backbeat) */
+  isKick: boolean;
+  step: number;
+}
+
 export interface GameEvents {
   kill: KillEvent;
   playerHit: PlayerHitEvent;
   shoot: ShootEvent;
   gameOver: GameOverEvent;
+  musicBeat: MusicBeatEvent;
 }
 
 type Handler<E> = (e: E) => void;

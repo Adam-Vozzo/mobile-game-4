@@ -128,6 +128,7 @@ export interface AppConfig {
 
   audio: {
     sfxEnabled: boolean;
+    musicEnabled: boolean;
     musicVolume: number;
     sfxVolume: number;
     musicReactivity: boolean;
@@ -151,7 +152,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.6.0',
+  buildVersion: '0.7.0',
 
   world: {
     width: 1600,
@@ -241,6 +242,7 @@ const _DEFAULTS: AppConfig = {
 
   audio: {
     sfxEnabled: true,
+    musicEnabled: false,
     musicVolume: 0.5,
     sfxVolume: 0.7,
     musicReactivity: true,

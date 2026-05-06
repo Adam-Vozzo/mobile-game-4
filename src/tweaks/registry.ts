@@ -82,9 +82,10 @@ export function buildRegistry(): readonly Tweak[] {
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));
-  reg.push(slider('audio', 'audio.musicVolume', 'Music volume', 0, 1, 0.05));
   reg.push(slider('audio', 'audio.sfxVolume', 'SFX volume', 0, 1, 0.05));
-  reg.push(toggle('audio', 'audio.musicReactivity', 'Music reactivity', true));
+  reg.push(toggle('audio', 'audio.musicEnabled', 'Procedural music (128 BPM synthwave)', true));
+  reg.push(slider('audio', 'audio.musicVolume', 'Music volume', 0, 1, 0.05));
+  reg.push(toggle('audio', 'audio.musicReactivity', 'Music-reactive grid + particles', true));
 
   // FLOW
   reg.push(slider('flow', 'flow.spawnRateMultiplier', 'Spawn rate', 0.25, 3, 0.05));

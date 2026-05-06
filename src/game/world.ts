@@ -79,6 +79,24 @@ export class World {
     this.weavers = new Weavers(renderer.layers.vector);
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
     this.flash = new ScreenFlash(renderer.layers.overlay);
+
+    events.on('musicBeat', ({ isKick }) => {
+      if (!config.audio.musicReactivity) return;
+      if (isKick) {
+        // Push grid outward from center on kick — subtle rhythmic breath.
+        this.grid.push(
+          renderer.viewport.halfW,
+          renderer.viewport.halfH,
+          config.grid.explosionInfluence * 0.18,
+          config.grid.influenceRadius * 1.6,
+        );
+      } else {
+        // Snare: light screen flash (dim, fast).
+        if (config.juice.screenFlash) {
+          this.flash.flash(0x8833ff, 0.08, 0.06);
+        }
+      }
+    });
   }
 
   entityCount(): number {
