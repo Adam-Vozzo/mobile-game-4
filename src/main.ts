@@ -12,6 +12,7 @@ import { TweaksMenu } from './tweaks/menu';
 import { applyOverlay, loadOverlay } from './tweaks/state';
 import { buildRegistry } from './tweaks/registry';
 import { FourFingerTap } from './tweaks/gesture';
+import { audioBus } from './audio/bus';
 
 function makeScheme(s: ControlScheme): ControlSchemeImpl {
   switch (s) {
@@ -104,8 +105,11 @@ async function main(): Promise<void> {
   };
   host.addEventListener('pointerdown', tryLock, { once: true, passive: true });
 
+  // Audio SFX bus — subscribes to kill/shoot/playerHit events.
+  audioBus.init();
+
   // Expose for debug & smoke test
-  (window as Window & { __game?: unknown }).__game = { world, hud, loop, config, tweaks };
+  (window as Window & { __game?: unknown }).__game = { world, hud, loop, config, tweaks, audioBus };
 
   await registerServiceWorker();
 }
