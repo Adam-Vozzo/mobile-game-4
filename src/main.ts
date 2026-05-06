@@ -13,6 +13,7 @@ import { applyOverlay, loadOverlay } from './tweaks/state';
 import { buildRegistry } from './tweaks/registry';
 import { FourFingerTap } from './tweaks/gesture';
 import { audioBus } from './audio/bus';
+import { musicEngine } from './audio/music';
 import { GameOverOverlay } from './ui/game-over';
 import { events } from './engine/events';
 
@@ -52,6 +53,7 @@ async function main(): Promise<void> {
   const gameOver = new GameOverOverlay(host, () => {
     world.reset();
     loop.setPaused(false);
+    musicEngine.start();
   });
 
   events.on('gameOver', (e) => {
@@ -120,8 +122,22 @@ async function main(): Promise<void> {
   // Audio SFX bus — subscribes to kill/shoot/playerHit events.
   audioBus.init();
 
+  // Music engine — starts on first user interaction (satisfies AudioContext gesture requirement).
+  // Respects the audio.musicEnabled toggle; toggling it in the Tweaks Menu takes effect on retry.
+  // start() is idempotent: checks config.audio.musicEnabled and the running flag.
+  host.addEventListener('pointerdown', () => musicEngine.start(), { passive: true });
+  events.on('gameOver', () => musicEngine.stop());
+
   // Expose for debug & smoke test
-  (window as Window & { __game?: unknown }).__game = { world, hud, loop, config, tweaks, audioBus };
+  (window as Window & { __game?: unknown }).__game = {
+    world,
+    hud,
+    loop,
+    config,
+    tweaks,
+    audioBus,
+    musicEngine,
+  };
 
   await registerServiceWorker();
 }

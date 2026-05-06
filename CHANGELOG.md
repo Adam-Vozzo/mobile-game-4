@@ -2,6 +2,56 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.7.0 — Iteration 7: Procedural music engine + beat reactivity (2026-05-06)
+
+**Choice: FEATURE** — No feedback to act on. Music is design pillar 7 (music-reactive
+flourishes) and the top remaining feel-affecting roadmap item. Implemented as a
+Web Audio API synthesizer (no asset files) behind an experimental toggle.
+
+### What
+
+- **`src/audio/music.ts`** — `MusicEngine` class. 128 BPM synthwave loop procedurally
+  synthesised from Web Audio API primitives:
+  - **Kick drum**: sine oscillator with pitch-drop (180→38 Hz), heavy low end.
+  - **Snare**: noise burst (highpass 1800 Hz) + sine body tone.
+  - **Hi-hat**: short noise burst (highpass 8000 Hz) on off-beats.
+  - **Bass**: triangle oscillator, A-minor-pentatonic 16-step sequence, lowpass-filtered.
+  - **Lead melody**: sawtooth + resonant lowpass (Q=5), A-minor-pentatonic, one note
+    per quarter note, filter sweep on each note.
+  - Lookahead scheduler: schedules 150ms of audio every 50ms — no glitches.
+  - `start()` / `stop()` / `updateVolume()` / `isRunning` public API.
+  - `start()` is idempotent and self-guards on `config.audio.musicEnabled`.
+- **Beat reactivity** (`src/game/world.ts`): listens for `musicBeat` events.
+  - Kick: `grid.push()` from screen center — subtle rhythmic breath in the grid.
+  - Snare: dim purple `screenFlash` pulse (0x8833ff, α=0.08) when `screenFlash` is on.
+  - Only fires when `config.audio.musicReactivity` is true.
+- **`musicBeat` event** added to `GameEvents` / `src/engine/events.ts`:
+  `{ isKick: boolean, step: number }`.
+- **`audio.musicEnabled`** config field added (default `false`).
+- **Tweaks Menu** (Audio category):
+  - `audio.musicEnabled` — "Procedural music (128 BPM synthwave)" — experimental, default off.
+  - `audio.musicReactivity` — "Music-reactive grid + particles" — experimental (label updated).
+  - `audio.musicVolume` slider moved below `musicEnabled` for better UX grouping.
+- **Wired in `main.ts`**:
+  - `pointerdown` on host calls `musicEngine.start()` (satisfies AudioContext user-gesture
+    requirement; `start()` ignores the call if disabled or already running).
+  - `gameOver` event stops the music.
+  - Retry (PLAY AGAIN button) restarts the music.
+- **`buildVersion`** bumped to `0.7.0`.
+- 7 new tests for `MusicEngine`; total now 43 passing.
+- Bundle: 163 KB gz (still well under 500 KB target).
+
+### Risks
+
+- The procedural music has no randomisation between runs (deterministic sequence). This
+  is intentional for v1 — it's easy to predict which notes will play and lets the human
+  judge if the loop is listenable before adding variation.
+- Beat events use `setTimeout` for scheduling: if the tab is backgrounded, timer precision
+  degrades and beats may drift from the audio. The audio itself stays accurate (Web Audio
+  API schedules ahead). Reactivity may feel slightly late after a tab-switch — acceptable.
+- The `pointerdown` listener to start music fires on every pointer event (not just once),
+  but `start()` is idempotent so there's no performance cost.
+
 ## 0.6.0 — Iteration 6: Game-over flow — lives, death cam, score panel, retry (2026-05-06)
 
 **Choice: FEATURE** — No feedback to act on; game-over flow was the top ROADMAP item

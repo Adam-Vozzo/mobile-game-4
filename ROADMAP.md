@@ -22,12 +22,15 @@ change.
 - **Iteration 6: Game-over flow.** ✅ Landed in v0.6.0. Lives system (3 lives),
   invincibility window, death cam, score panel with best-score persistence,
   retry. Score accumulates across lives; only multiplier resets on hit.
+- **Iteration 7: Procedural music + beat reactivity.** ✅ Landed in v0.7.0.
+  128 BPM synthwave loop (kick/snare/hihat/bass/lead), all Web Audio API —
+  no asset files. Beat-driven grid pulse + snare flash. `audio.musicEnabled`
+  experimental toggle; `audio.musicReactivity` experimental toggle.
 
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- Music: one looping track + reactive intensity (toggleable).
 - 2–4 more enemy types: Snake (chains of segments), Black Hole (gravity well),
   Pinwheel (orbiting drones), Splitter (splits on death).
 - Spawn director: wave logic + tension curve.
