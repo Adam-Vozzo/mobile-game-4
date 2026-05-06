@@ -52,6 +52,23 @@ export interface AppConfig {
       turnRate: number;
       pointValue: number;
     };
+    grunt: {
+      radius: number;
+      idleSpeed: number;
+      chargeSpeed: number;
+      /** distance at which the grunt locks onto and charges the player */
+      detectionRadius: number;
+      pointValue: number;
+    };
+    weaver: {
+      radius: number;
+      speed: number;
+      /** wave oscillation frequency in rad/s */
+      waveFreq: number;
+      /** wave amplitude as a multiplier on speed */
+      waveAmp: number;
+      pointValue: number;
+    };
     spawn: {
       /** seconds between spawns at start; will be modulated by spawn director later */
       intervalSeconds: number;
@@ -119,6 +136,8 @@ export interface AppConfig {
   flow: {
     spawnRateMultiplier: number;
     startingLives: number;
+    /** Enable Grunt and Weaver enemy types alongside Wanderers (experimental). */
+    newEnemyTypes: boolean;
   };
 
   debug: {
@@ -132,7 +151,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.4.0',
+  buildVersion: '0.5.0',
 
   world: {
     width: 1600,
@@ -164,6 +183,20 @@ const _DEFAULTS: AppConfig = {
       speed: 110,
       turnRate: 1.2,
       pointValue: 25,
+    },
+    grunt: {
+      radius: 16,
+      idleSpeed: 75,
+      chargeSpeed: 230,
+      detectionRadius: 260,
+      pointValue: 50,
+    },
+    weaver: {
+      radius: 11,
+      speed: 145,
+      waveFreq: 2.5,
+      waveAmp: 0.7,
+      pointValue: 75,
     },
     spawn: {
       intervalSeconds: 0.8,
@@ -216,6 +249,7 @@ const _DEFAULTS: AppConfig = {
   flow: {
     spawnRateMultiplier: 1.0,
     startingLives: 3,
+    newEnemyTypes: false,
   },
 
   debug: {

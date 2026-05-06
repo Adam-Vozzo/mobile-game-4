@@ -90,6 +90,7 @@ export function buildRegistry(): readonly Tweak[] {
   reg.push(slider('flow', 'flow.spawnRateMultiplier', 'Spawn rate', 0.25, 3, 0.05));
   reg.push(slider('flow', 'flow.startingLives', 'Starting lives', 1, 9, 1));
   reg.push(slider('flow', 'score.multiplier.decayPerSecond', 'Mult decay/sec', 0, 4, 0.1));
+  reg.push(toggle('flow', 'flow.newEnemyTypes', 'New enemy types (Grunt + Weaver)', true));
 
   // DEBUG
   reg.push(toggle('debug', 'debug.fpsOverlay', 'FPS overlay'));

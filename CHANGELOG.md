@@ -2,6 +2,44 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.5.0 — Iteration 5: New enemy types — Grunt + Weaver (2026-05-06)
+
+**Choice: FEATURE** — top feel-affecting ROADMAP item. Only one enemy type
+(Wanderer) existed; a single-enemy game has no tactical variety. Two new types
+add distinct threat personalities without requiring a spawn director rewrite.
+
+### What
+
+- **Grunt** (`src/game/enemies/grunt.ts`): heavy orange triangle. Idles slowly
+  (wanders) until the player enters its 260 px detection radius, then charges at
+  3× idle speed and faces the player (visual threat cue). Larger hitbox (radius
+  16), worth 50 pts. Orange particle burst on kill; heavier shake and grid kick.
+- **Weaver** (`src/game/enemies/weaver.ts`): slim lime chevron. Homes toward the
+  player while oscillating side-to-side in a sine wave, making it harder to
+  predict. Smaller hitbox (radius 11), worth 75 pts. Lime particle burst on kill.
+- **New ship shapes** in `src/render/ships.ts`: `drawGrunt` (filled triangle,
+  orange glow layers) and `drawWeaver` (open chevron/V, lime glow layers) —
+  matching the stacked-halo style of existing shapes.
+- **Toggle**: `flow.newEnemyTypes` (experimental, default off) in the Tweaks Menu
+  → Flow category. When off, only Wanderers spawn (existing behaviour unchanged).
+  When on, spawn director picks: 50% Wanderer / 30% Grunt / 20% Weaver. The
+  combined enemy count respects `enemies.spawn.maxAlive`.
+- **Auto-aim** now considers all enemy types, not just wanderers, so the player
+  leads shots correctly when new types are present.
+- **Config**: added `enemies.grunt.*` and `enemies.weaver.*` blocks; `flow.newEnemyTypes`.
+- **`buildVersion`** bumped to 0.5.0.
+
+### Risks
+
+- Grunt charge detection radius (260 px) may feel too tight on large screens
+  where the player has more room — tweak `detectionRadius` if playtests flag.
+- Weaver wave amplitude (0.7×) and frequency (2.5 rad/s) are first-pass;
+  may feel too chaotic or too easy — both are config values, adjustable.
+- New enemy pools add 2×64 Graphics objects to the scene graph at startup; all
+  are invisible until acquired. Negligible on modern hardware; watch PixiJS
+  container child count if performance regresses.
+- Bundle size: negligible increase (~1 KB gz, two small modules).
+
 ## 0.4.0 — Iteration 4: Kill feedback triad (2026-05-06)
 
 Choice: FEATURE — implementing hitstop, slow-mo, and screen flash.

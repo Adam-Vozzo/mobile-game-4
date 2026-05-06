@@ -55,6 +55,42 @@ function diamond(g: Graphics, r: number): void {
   g.lineTo(r, 0);
 }
 
+export function drawGrunt(g: Graphics, color = 0xff7700): void {
+  g.clear();
+  const r = 16;
+  g.lineStyle({ width: 8, color, alpha: 0.18 });
+  triangle(g, r);
+  g.lineStyle({ width: 4, color, alpha: 0.48 });
+  triangle(g, r);
+  g.lineStyle({ width: 1.5, color: 0xffffff, alpha: 1 });
+  triangle(g, r);
+}
+
+function triangle(g: Graphics, r: number): void {
+  g.moveTo(r, 0);
+  g.lineTo(-r * 0.55, -r * 0.95);
+  g.lineTo(-r * 0.55, r * 0.95);
+  g.lineTo(r, 0);
+}
+
+export function drawWeaver(g: Graphics, color = 0xaaff00): void {
+  g.clear();
+  const r = 11;
+  g.lineStyle({ width: 6, color, alpha: 0.16 });
+  chevron(g, r);
+  g.lineStyle({ width: 3, color, alpha: 0.5 });
+  chevron(g, r);
+  g.lineStyle({ width: 1.25, color: 0xffffff, alpha: 1 });
+  chevron(g, r);
+}
+
+function chevron(g: Graphics, r: number): void {
+  g.moveTo(r, 0);
+  g.lineTo(-r * 0.6, -r * 0.9);
+  g.moveTo(r, 0);
+  g.lineTo(-r * 0.6, r * 0.9);
+}
+
 export function drawBullet(g: Graphics, color = 0x00fff7): void {
   g.clear();
   // Stretched bullet drawn along +x; rotated by container.

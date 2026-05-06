@@ -15,14 +15,18 @@ change.
 - **Iteration 4: Kill feedback triad.** ✅ Landed in v0.4.0. Hitstop,
   slow-mo on big kill, and screen flash — all experimental toggles in the
   Visual Juice category.
+- **Iteration 5: New enemy types — Grunt + Weaver.** ✅ Landed in v0.5.0.
+  Grunt (heavy charger, orange) and Weaver (sinusoidal homing, lime) added
+  behind `flow.newEnemyTypes` experimental toggle. Auto-aim updated to target
+  all enemy types.
 
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - Music: one looping track + reactive intensity (toggleable).
-- 4–6 more enemy types with distinct silhouettes & movement: Grunt, Weaver,
-  Snake, Black Hole, Pinwheel, Splitter.
+- 2–4 more enemy types: Snake (chains of segments), Black Hole (gravity well),
+  Pinwheel (orbiting drones), Splitter (splits on death).
 - Spawn director: wave logic + tension curve.
 - Game-over flow: death cam, score panel, retry.
 - Score persistence (best score local).
