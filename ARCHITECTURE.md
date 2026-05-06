@@ -35,6 +35,12 @@ src/
       single-thumb-autoaim.ts  # default v1 scheme
   pwa/
     register.ts             # service worker registration via vite-plugin-pwa
+  tweaks/
+    registry.ts             # declarative tweak registry (single source of truth)
+    state.ts                # localStorage persistence keyed by buildVersion
+    feedback.ts             # LIKE/DISLIKE/COMPARE writer + clipboard + download
+    gesture.ts              # four-finger tap detector
+    menu.ts                 # DOM menu UI + live perf overlay
   styles.css
 ```
 
@@ -68,12 +74,16 @@ src/
 - **Effects layer is event-driven.** Kill events fan out to particles, shake,
   hitstop, score, audio (later). Systems listen rather than reach in.
 
-## Iteration 2: Tweaks Menu
+## Iteration 2: Tweaks Menu — landed
 
-A `tweaks/` module reads/writes to localStorage (key includes build version),
-overlays `config.ts` defaults at boot, and binds UI controls to the live
-config. It writes a `TWEAKS_FEEDBACK.jsonl` line via `navigator.clipboard` /
-download fallback for human consumption.
+The `tweaks/` module reads/writes to localStorage (key includes build
+version), overlays `config.ts` defaults at boot, and binds UI controls to the
+live config. It writes a `TWEAKS_FEEDBACK.jsonl` line via
+`navigator.clipboard` and a localStorage buffer; "Download feedback" emits
+the buffer as a `.jsonl` file the human can paste into the repo.
+
+Open gestures: four-finger tap (touch), backtick/tilde (desktop dev), and a
+floating gear button in dev builds. Closing resumes the loop.
 
 ## What we deliberately don't have
 

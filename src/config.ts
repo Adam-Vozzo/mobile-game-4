@@ -129,7 +129,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.1.0',
+  buildVersion: '0.2.0',
 
   world: {
     width: 1600,

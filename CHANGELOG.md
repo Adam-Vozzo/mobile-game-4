@@ -2,6 +2,34 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.2.0 — Iteration 2: Tweaks Menu
+
+- Added `src/tweaks/` module: state persistence, declarative tweak registry,
+  feedback writer, four-finger-tap gesture detector, and the menu UI itself.
+- The menu pauses the loop while open, persists user-changed values to
+  localStorage keyed by `buildVersion`, and applies them at boot before any
+  system reads `config`.
+- Five categories wired (the spec asked for at least controls + visual juice):
+  Controls, Visual juice, Audio, Game flow, Debug.
+- Each tweak renders the right widget for its kind: toggle / select / slider.
+  Tweaks tagged `experimental` get a magenta badge; defaults to off.
+- Feedback panel: LIKE / DISLIKE / COMPARE buttons + free-text note, write a
+  `{timestamp, tag, buildVersion, note, config}` entry to a localStorage
+  buffer and copy the JSONL line to the clipboard. "Download feedback" emits
+  the full buffer as a `.jsonl` file. "Export config" copies a config JSON
+  snapshot to clipboard.
+- Live perf line is always visible at the top of the menu while open: fps,
+  sim ms, render ms, entity count, particle count, build version.
+- Reset per-category and reset-all buttons.
+- Open gestures: four-finger tap (touch), backtick/tilde (desktop dev), and
+  a small floating gear button when running `npm run dev`.
+- Added a second control scheme: `virtual-twin-sticks`. Switching schemes via
+  the menu hot-swaps without reloading. Default remains `single-thumb-autoaim`
+  per `LOCKED_PARAMS.md`.
+- Engine: `Loop.setPaused()` so the menu can freeze simulation cleanly.
+- Tests: 7 new tweaks-state/registry/feedback tests; total now 27 passing.
+- Bundle: 168 KB gz (still well under 500 KB target).
+
 ## 0.1.0 — Iteration 1: Vertical slice
 
 - Repo scaffolded: TypeScript strict, Vite, PixiJS 7, Howler, Workbox via

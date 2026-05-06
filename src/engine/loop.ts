@@ -32,6 +32,7 @@ export class Loop {
   private lastNow = 0;
   private rafId = 0;
   private running = false;
+  private paused = false;
   private fpsEMA = 60;
   private simMsEMA = 0;
   private renderMsEMA = 0;
@@ -53,14 +54,18 @@ export class Loop {
       const fpsInstant = elapsed > 0 ? 1 / elapsed : 60;
       this.fpsEMA = this.fpsEMA * 0.9 + fpsInstant * 0.1;
 
-      this.accumulator += elapsed;
-      if (this.accumulator > MAX_STEPS_PER_FRAME * SIM_DT) {
-        this.accumulator = MAX_STEPS_PER_FRAME * SIM_DT;
+      if (!this.paused) {
+        this.accumulator += elapsed;
+        if (this.accumulator > MAX_STEPS_PER_FRAME * SIM_DT) {
+          this.accumulator = MAX_STEPS_PER_FRAME * SIM_DT;
+        }
+      } else {
+        this.accumulator = 0;
       }
 
       let steps = 0;
       const simStart = performance.now();
-      while (this.accumulator >= SIM_DT && steps < MAX_STEPS_PER_FRAME) {
+      while (!this.paused && this.accumulator >= SIM_DT && steps < MAX_STEPS_PER_FRAME) {
         this.hooks.step(SIM_DT);
         this.accumulator -= SIM_DT;
         steps++;
@@ -88,6 +93,14 @@ export class Loop {
     this.running = false;
     if (this.rafId) cancelAnimationFrame(this.rafId);
     this.rafId = 0;
+  }
+
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+  }
+
+  get isPaused(): boolean {
+    return this.paused;
   }
 }
 
