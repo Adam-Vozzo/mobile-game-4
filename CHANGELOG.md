@@ -2,6 +2,52 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.8.0 — Iteration 8: Spawn Director (2026-05-06)
+
+**Choice: FEATURE** — No feedback to act on. Spawn Director is the top remaining
+feel-affecting roadmap item: replaces flat enemy spawning with an escalating
+difficulty curve, dynamic enemy mix, and random surge bursts.
+
+### What landed
+
+- `src/game/spawn-director.ts` — new `SpawnDirector` class.
+  - Smooth difficulty curve: 0→1 over `rampSeconds` (default 120 s).
+  - Spawn interval interpolates 1.4 s → 0.35 s as difficulty rises.
+  - Simultaneous enemy cap scales from 16 → 32.
+  - Enemy mix shifts with smoothstep transitions: Wanderers-only early,
+    Grunts appear at t≈0.2, Weavers at t≈0.45 — max mix is ~40/30/30.
+  - Respects `flow.newEnemyTypes` flag — Wanderers-only when false.
+  - Random "surge" bursts (2% chance/s, 4 s long, 3.3× spawn rate) create
+    intensity peaks and troughs.
+- `src/config.ts` — new `spawnDirector` config block with 9 tunable params.
+- `src/game/world.ts` — director wired in; flat-rate path preserved when
+  director is disabled. `spawnAt()` helper extracted (DRY).
+- `src/tweaks/registry.ts` — experimental toggle registered under Flow.
+
+### Tests
+
+- 9 new tests in `tests/spawn-director.test.ts` covering: difficulty curve,
+  clamping, cap enforcement, spawn production, enemy type selection by
+  `newEnemyTypes` flag, variety at max difficulty, surge state, and reset.
+- Total: **52 tests passing**.
+
+### Toggles
+
+- `spawnDirector.enabled` — experimental, default **off**.
+  Description: "Escalating pressure over 2 min — spawn rate ramps, enemy mix
+  shifts, random surges spike intensity."
+
+### Risks
+
+- Surge bursts with all enemy types enabled may create temporarily dense
+  screens on low-end devices; `maxMaxAlive: 32` cap limits worst case.
+- Difficulty ramp is 120 s — may feel too slow early; `rampSeconds` is
+  config-exposed for easy tuning via feedback.
+
+### Bundle
+
+- index.js: 17.49 KB gz (was 17.49 KB; +negligible for director module).
+
 ## 0.7.0 — Iteration 7: Procedural music engine + beat reactivity (2026-05-06)
 
 **Choice: FEATURE** — No feedback to act on. Music is design pillar 7 (music-reactive
