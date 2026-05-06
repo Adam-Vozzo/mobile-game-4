@@ -20,6 +20,10 @@ Severity: 🔴 critical (blocks ship), 🟠 major (degrades feel), 🟡 minor, �
   favicon SVG. Acceptable for v1 internal use; rasterise before public release.
 - 💭 No bundle-size CI gate enforced yet beyond the `bundle:size` script.
   Need to wire it as a CI failure once the actual size stabilises.
+- 🟡 Screen flash overlay is a child of `app.stage`, which carries the
+  camera-shake offset. Flash appears to shift ~14 px max during the first
+  frame of a shake. Imperceptible at the short durations used; fix properly
+  when a dedicated HUD/UI container is introduced.
 
 ## Closed
 

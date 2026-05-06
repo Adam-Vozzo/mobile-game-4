@@ -2,6 +2,36 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.4.0 — Iteration 4: Kill feedback triad (2026-05-06)
+
+Choice: FEATURE — implementing hitstop, slow-mo, and screen flash.
+
+- **Hitstop** (`juice.hitstopMs`, experimental slider 0–80 ms): freezes the
+  simulation for N fixed-step frames (120 Hz) after each kill. Shake and flash
+  still tick during freeze so they feel instantaneous. Was registered in the
+  tweaks menu since v0.2.0 but had no effect; now implemented.
+- **Slow-mo on big kill** (`juice.slowMoOnBigKill`, experimental toggle):
+  when enabled and the player's multiplier is ≥ 5×, each kill drops the time
+  scale to 0.15× for 1.5 s then recovers. Uses real dt for the timer so the
+  window is always 1.5 wall-clock seconds. Player-hit cancels slow-mo. Was
+  registered since v0.2.0 but unimplemented; now live.
+- **Screen flash** (`juice.screenFlash`, new experimental toggle): full-screen
+  colour overlay that pops on events and fades out. Kill → magenta 0.35 alpha /
+  150 ms; player-hit → white 0.55 alpha / 300 ms. Implemented as a single
+  oversized `Graphics` quad in a new `overlay` render layer above particles.
+  Color is cached; redraws only on color change (once per event type).
+- `renderer.ts`: added `overlay: Container` as the top-most render layer for
+  UI-plane effects that sit above game content.
+- `src/fx/screen-flash.ts`: new ScreenFlash class.
+- `config.ts`: added `juice.screenFlash` (default false); bumped version to
+  0.4.0.
+- All three effects default off; promote any or all via TWEAKS_FEEDBACK.
+- Risks: screen flash slightly shakes with the camera (stage-level offset
+  applies to the overlay too) — imperceptible at the short durations used.
+- Bundle: +0.44 KB gz game JS. Total ≪ 500 KB.
+- Tests: no new unit tests needed; effects are thin presentation
+  wrappers with no domain logic to unit-test.
+
 ## 0.3.0 — Iteration 3: Audio SFX Bus (2026-05-06)
 
 **Choice: FEATURE** — top ROADMAP "Next" item; config stubs for audio were already

@@ -17,6 +17,8 @@ export interface RenderLayers {
   vector: Container;
   /** GPU-friendly particle container — thousands of sprites */
   particles: ParticleContainer;
+  /** top-most layer for full-screen overlays (flash, etc.) */
+  overlay: Container;
 }
 
 export interface RendererBundle {
@@ -92,9 +94,13 @@ export async function createRenderer(host: HTMLElement): Promise<RendererBundle>
   });
   particles.blendMode = BLEND_MODES.ADD;
 
+  const overlay = new Container();
+  overlay.sortableChildren = false;
+
   app.stage.addChild(grid);
   app.stage.addChild(vector);
   app.stage.addChild(particles);
+  app.stage.addChild(overlay);
 
   const particleTexture = buildParticleTexture(app.renderer);
 
@@ -119,7 +125,7 @@ export async function createRenderer(host: HTMLElement): Promise<RendererBundle>
   window.addEventListener('resize', onResize);
   // Pixi's resizeTo runs on rAF; this callback is mostly belt-and-braces.
 
-  return { app, layers: { grid, vector, particles }, viewport, particleTexture };
+  return { app, layers: { grid, vector, particles, overlay }, viewport, particleTexture };
 }
 
 /** Camera transform for screen shake. Stage-level. */
