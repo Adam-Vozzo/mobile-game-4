@@ -33,6 +33,7 @@
 | build | gzipped | notes                                             |
 | ----- | ------- | ------------------------------------------------- |
 | 0.1.0 | ~159 KB | Pixi 142 KB gz, app 8 KB, Workbox SW ~10 KB.      |
+| 0.2.0 | ~168 KB | + Tweaks Menu (12 KB app, 1.7 KB CSS).            |
 
 ## Optimisation log
 

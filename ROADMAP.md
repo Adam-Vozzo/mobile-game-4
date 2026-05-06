@@ -5,16 +5,16 @@ change.
 
 ## Now
 
-- **Iteration 1: Vertical slice.** Player ship, single-thumb auto-aim, bullets,
-  Wanderer enemy, particle pool with PixiJS ParticleContainer, reactive grid,
-  score + multiplier HUD, PWA shell, CI green. *(in progress)*
-- **Iteration 2: Tweaks Menu.** Hidden gesture to open, persisted to
-  localStorage, live perf overlay, LIKE/DISLIKE/COMPARE writer to
-  `TWEAKS_FEEDBACK.jsonl`. CONTROLS + VISUAL JUICE categories, plus a second
-  control scheme as a toggle.
+- **Iteration 1: Vertical slice.** ✅ Landed in v0.1.0.
+- **Iteration 2: Tweaks Menu.** ✅ Landed in v0.2.0. All 5 categories
+  wired (Controls, Visual juice, Audio, Game flow, Debug); LIKE/DISLIKE/COMPARE
+  feedback writer; second control scheme (virtual-twin-sticks) added as a
+  toggle.
 
 ## Next
 
+- Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
+  feedback gets appended automatically.
 - Audio: Howler-driven SFX bus, layered hit/explosion/spawn sounds.
 - Music: one looping track + reactive intensity (toggleable).
 - Effects layer formalised: shake / flash / hitstop / slow-mo as event-driven
