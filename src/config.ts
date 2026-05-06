@@ -90,6 +90,8 @@ export interface AppConfig {
     gridReactivity: number;
     hitstopMs: number;
     slowMoOnBigKill: boolean;
+    /** Full-screen colour flash on kill / player-hit events. */
+    screenFlash: boolean;
   };
 
   grid: {
@@ -130,7 +132,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.3.0',
+  buildVersion: '0.4.0',
 
   world: {
     width: 1600,
@@ -191,6 +193,7 @@ const _DEFAULTS: AppConfig = {
     gridReactivity: 1.0,
     hitstopMs: 0,
     slowMoOnBigKill: false,
+    screenFlash: false,
   },
 
   grid: {

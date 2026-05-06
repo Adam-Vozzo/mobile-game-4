@@ -12,14 +12,15 @@ change.
   toggle.
 - **Iteration 3: Audio SFX Bus.** ✅ Landed in v0.3.0. Web Audio API synthesiser,
   3 sounds (shoot/kill/playerHit), lazy AudioContext, sfxEnabled toggle, 7 new tests.
+- **Iteration 4: Kill feedback triad.** ✅ Landed in v0.4.0. Hitstop,
+  slow-mo on big kill, and screen flash — all experimental toggles in the
+  Visual Juice category.
 
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - Music: one looping track + reactive intensity (toggleable).
-- Effects layer formalised: shake / flash / hitstop / slow-mo as event-driven
-  systems, all toggleable from the Tweaks Menu.
 - 4–6 more enemy types with distinct silhouettes & movement: Grunt, Weaver,
   Snake, Black Hole, Pinwheel, Splitter.
 - Spawn director: wave logic + tension curve.
