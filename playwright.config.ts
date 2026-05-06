@@ -16,7 +16,21 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Pixel 5'] },
+      use: {
+        ...devices['Pixel 5'],
+        launchOptions: {
+          args: [
+            // Force software WebGL via SwiftShader so the headless runner
+            // gets a real GL context (Pixi requires WebGL; without these
+            // flags some headless envs hand back null).
+            '--use-gl=angle',
+            '--use-angle=swiftshader',
+            '--enable-unsafe-swiftshader',
+            '--ignore-gpu-blocklist',
+            '--enable-webgl',
+          ],
+        },
+      },
     },
   ],
   webServer: {
