@@ -5,6 +5,7 @@ import { Wanderers } from './enemies/wanderer';
 import { ScoreState } from './score';
 import { ParticleSystem } from '../fx/particles';
 import { ReactiveGrid } from '../fx/grid';
+import { GameEffects } from '../fx/effects';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -21,10 +22,13 @@ export class World {
   readonly particles: ParticleSystem;
   readonly grid: ReactiveGrid;
   readonly score = new ScoreState();
+  private readonly effects = new GameEffects();
   private spawnTimer = 0.5;
   private shakeAmp = 0;
   private shakeOffsetX = 0;
   private shakeOffsetY = 0;
+  /** DOM overlay for screen flash — screen-space, unaffected by camera shake. */
+  private readonly flashEl: HTMLDivElement;
 
   constructor(renderer: RendererBundle) {
     this.renderer = renderer;
@@ -38,6 +42,16 @@ export class World {
     this.bullets = new Bullets(renderer.layers.vector);
     this.wanderers = new Wanderers(renderer.layers.vector);
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
+
+    // Screen-flash overlay: a white div that sits above the canvas in DOM order.
+    // Using a DOM element keeps it screen-space (not subject to the stage shake
+    // transform). mix-blend-mode:screen preserves the neon look.
+    const canvasHost = renderer.app.view.parentElement ?? document.body;
+    this.flashEl = document.createElement('div');
+    this.flashEl.style.cssText =
+      'position:absolute;inset:0;pointer-events:none;background:#fff;' +
+      'opacity:0;mix-blend-mode:screen;z-index:100';
+    canvasHost.appendChild(this.flashEl);
   }
 
   /** Convenience for tests / smoke. */
@@ -49,9 +63,19 @@ export class World {
     const w = this.renderer.viewport.width;
     const h = this.renderer.viewport.height;
 
+    // Flash always decays in real time — visible and fading during hitstop freeze.
+    this.effects.stepAlways(dt);
+
+    // Hitstop: freeze simulation while the kill-impact lands.
+    if (this.effects.tickHitstop(dt)) return;
+
+    // Slow-mo: tick the window counter and compute this tick's time scale.
+    this.effects.tickSlowMo(dt);
+    const effectiveDt = dt * this.effects.timeScale;
+
     // Input → player
     controls.read(input);
-    this.player.applyMove(dt, input.moveX, input.moveY);
+    this.player.applyMove(effectiveDt, input.moveX, input.moveY);
     this.player.clampToWorld(w, h);
 
     // Auto-aim: pick nearest enemy.
@@ -82,7 +106,7 @@ export class World {
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
       const k = config.controls.autoAimStrength;
-      this.player.setFacing(cur + diff * Math.min(1, 18 * dt * k));
+      this.player.setFacing(cur + diff * Math.min(1, 18 * effectiveDt * k));
     } else {
       // No targets — face by velocity if moving, else hold.
       if (Math.abs(ps.vx) + Math.abs(ps.vy) > 1) {
@@ -91,23 +115,23 @@ export class World {
     }
 
     // Fire
-    if (this.player.consumeFireTick(dt, input.fire && (hasTarget || input.hasAim))) {
+    if (this.player.consumeFireTick(effectiveDt, input.fire && (hasTarget || input.hasAim))) {
       const dirx = Math.cos(ps.facing);
       const diry = Math.sin(ps.facing);
       this.bullets.spawn(ps.x + dirx * 16, ps.y + diry * 16, dirx, diry);
     }
 
     // Enemies
-    this.wanderers.step(dt, w, h);
+    this.wanderers.step(effectiveDt, w, h);
 
     // Bullets
-    this.bullets.step(dt, w, h);
+    this.bullets.step(effectiveDt, w, h);
 
     // Collisions: bullets ↔ wanderers
     this.collide();
 
     // Spawn director (slice-only logic — final spawn director is iter ≥3)
-    this.spawnTimer -= dt;
+    this.spawnTimer -= effectiveDt;
     while (this.spawnTimer <= 0) {
       this.spawnTimer +=
         config.enemies.spawn.intervalSeconds / Math.max(0.01, config.flow.spawnRateMultiplier);
@@ -117,11 +141,11 @@ export class World {
     }
 
     // Particles
-    this.particles.step(dt);
+    this.particles.step(effectiveDt);
 
-    // Grid: pull around player, decay shake
-    this.grid.pull(ps.x, ps.y, config.grid.playerInfluence * dt);
-    this.grid.step(dt);
+    // Grid: pull around player, decay shake (shake uses real dt for snappiness)
+    this.grid.pull(ps.x, ps.y, config.grid.playerInfluence * effectiveDt);
+    this.grid.step(effectiveDt);
 
     if (this.shakeAmp > 0) {
       this.shakeAmp = Math.max(0, this.shakeAmp - SHAKE_DECAY * dt);
@@ -132,14 +156,18 @@ export class World {
       this.shakeOffsetY = 0;
     }
 
-    // Score decay
-    this.score.step(dt);
+    // Score decay (slows with slow-mo so chains are easier to maintain)
+    this.score.step(effectiveDt);
   }
 
   render(_alpha: number): void {
     this.player.render();
     // Camera shake at the stage level.
     this.renderer.app.stage.position.set(this.shakeOffsetX, this.shakeOffsetY);
+    // Flash overlay opacity — DOM element is screen-space, unaffected by shake.
+    this.flashEl.style.opacity = this.effects.flashAlpha > 0.002
+      ? this.effects.flashAlpha.toFixed(3)
+      : '0';
     this.grid.draw();
   }
 
@@ -212,6 +240,8 @@ export class World {
     this.grid.push(x, y, config.grid.explosionInfluence, config.grid.influenceRadius);
     // Shake
     this.shakeAmp = Math.max(this.shakeAmp, 6 * config.juice.screenShakeIntensity);
+    // Feel effects — hitstop, slow-mo, flash (driven by post-kill multiplier)
+    this.effects.onKill(this.score.multiplier);
     events.emit('kill', { x, y, r: 1, g: 0.17, b: 0.84, pointValue: cfg.pointValue });
   }
 
@@ -227,6 +257,7 @@ export class World {
     this.particles.burst(x, y, 200, 0xffffff, 1.2, 1.2);
     this.grid.push(x, y, config.grid.explosionInfluence * 1.5, config.grid.influenceRadius * 1.4);
     this.shakeAmp = Math.max(this.shakeAmp, 14 * config.juice.screenShakeIntensity);
+    this.effects.onPlayerHit();
     events.emit('playerHit', { x, y });
   }
 }

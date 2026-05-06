@@ -78,6 +78,7 @@ export function buildRegistry(): readonly Tweak[] {
   reg.push(slider('visual', 'juice.gridReactivity', 'Grid reactivity', 0, 2, 0.05));
   reg.push(slider('visual', 'juice.hitstopMs', 'Hitstop on kill', 0, 80, 1, 'ms', true));
   reg.push(toggle('visual', 'juice.slowMoOnBigKill', 'Slow-mo on big kill', true));
+  reg.push(toggle('visual', 'juice.flashOnKill', 'Flash on kill', true));
 
   // AUDIO
   reg.push(slider('audio', 'audio.musicVolume', 'Music volume', 0, 1, 0.05));

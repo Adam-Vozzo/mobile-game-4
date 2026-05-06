@@ -4,6 +4,10 @@ Severity: 🔴 critical (blocks ship), 🟠 major (degrades feel), 🟡 minor, �
 
 ## Open
 
+- 💭 Screen flash overlay uses `mix-blend-mode: screen` on a DOM div. Safari
+  may render blending differently (fallback: opacity without blend is still
+  readable). Not worth fixing until a real device test surfaces a problem.
+
 - 💭 No real bloom post-process pass yet. Glow is approximated by stacked
   half-alpha strokes. May upgrade to a Pixi `BlurFilter` pass on a low-res RT
   if/when frame budget allows. Do not invest until measurements demand.

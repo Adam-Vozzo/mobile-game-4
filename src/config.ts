@@ -90,6 +90,8 @@ export interface AppConfig {
     gridReactivity: number;
     hitstopMs: number;
     slowMoOnBigKill: boolean;
+    /** Brief white flash on each kill. Experimental. */
+    flashOnKill: boolean;
   };
 
   grid: {
@@ -190,6 +192,7 @@ const _DEFAULTS: AppConfig = {
     gridReactivity: 1.0,
     hitstopMs: 0,
     slowMoOnBigKill: false,
+    flashOnKill: false,
   },
 
   grid: {

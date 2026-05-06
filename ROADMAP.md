@@ -10,6 +10,9 @@ change.
   wired (Controls, Visual juice, Audio, Game flow, Debug); LIKE/DISLIKE/COMPARE
   feedback writer; second control scheme (virtual-twin-sticks) added as a
   toggle.
+- **Iteration 3: Effects layer.** ✅ Landed in v0.3.0. Hitstop, slow-mo on
+  big-kill chains, screen flash (DOM overlay). All experimental toggles in
+  Tweaks Menu.
 
 ## Next
 
@@ -17,8 +20,6 @@ change.
   feedback gets appended automatically.
 - Audio: Howler-driven SFX bus, layered hit/explosion/spawn sounds.
 - Music: one looping track + reactive intensity (toggleable).
-- Effects layer formalised: shake / flash / hitstop / slow-mo as event-driven
-  systems, all toggleable from the Tweaks Menu.
 - 4–6 more enemy types with distinct silhouettes & movement: Grunt, Weaver,
   Snake, Black Hole, Pinwheel, Splitter.
 - Spawn director: wave logic + tension curve.
