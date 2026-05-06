@@ -1,7 +1,7 @@
 {
   "name": "neon-drift",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Mobile-first PWA twin-stick shooter in the Geometry Wars vein. Pure vector, neon, glow, lavish particles.",
   "scripts": {

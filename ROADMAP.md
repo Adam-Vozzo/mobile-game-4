@@ -10,12 +10,13 @@ change.
   wired (Controls, Visual juice, Audio, Game flow, Debug); LIKE/DISLIKE/COMPARE
   feedback writer; second control scheme (virtual-twin-sticks) added as a
   toggle.
+- **Iteration 3: Audio SFX Bus.** ✅ Landed in v0.3.0. Web Audio API synthesiser,
+  3 sounds (shoot/kill/playerHit), lazy AudioContext, sfxEnabled toggle, 7 new tests.
 
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- Audio: Howler-driven SFX bus, layered hit/explosion/spawn sounds.
 - Music: one looping track + reactive intensity (toggleable).
 - Effects layer formalised: shake / flash / hitstop / slow-mo as event-driven
   systems, all toggleable from the Tweaks Menu.

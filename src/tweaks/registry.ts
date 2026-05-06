@@ -80,6 +80,7 @@ export function buildRegistry(): readonly Tweak[] {
   reg.push(toggle('visual', 'juice.slowMoOnBigKill', 'Slow-mo on big kill', true));
 
   // AUDIO
+  reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));
   reg.push(slider('audio', 'audio.musicVolume', 'Music volume', 0, 1, 0.05));
   reg.push(slider('audio', 'audio.sfxVolume', 'SFX volume', 0, 1, 0.05));
   reg.push(toggle('audio', 'audio.musicReactivity', 'Music reactivity', true));

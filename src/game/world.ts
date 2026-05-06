@@ -94,7 +94,10 @@ export class World {
     if (this.player.consumeFireTick(dt, input.fire && (hasTarget || input.hasAim))) {
       const dirx = Math.cos(ps.facing);
       const diry = Math.sin(ps.facing);
-      this.bullets.spawn(ps.x + dirx * 16, ps.y + diry * 16, dirx, diry);
+      const bx = ps.x + dirx * 16;
+      const by = ps.y + diry * 16;
+      this.bullets.spawn(bx, by, dirx, diry);
+      events.emit('shoot', { x: bx, y: by });
     }
 
     // Enemies

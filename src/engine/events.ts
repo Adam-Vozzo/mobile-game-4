@@ -19,9 +19,15 @@ export interface PlayerHitEvent {
   y: number;
 }
 
+export interface ShootEvent {
+  x: number;
+  y: number;
+}
+
 export interface GameEvents {
   kill: KillEvent;
   playerHit: PlayerHitEvent;
+  shoot: ShootEvent;
 }
 
 type Handler<E> = (e: E) => void;

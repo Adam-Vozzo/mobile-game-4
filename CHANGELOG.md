@@ -2,6 +2,45 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.3.0 — Iteration 3: Audio SFX Bus (2026-05-06)
+
+**Choice: FEATURE** — top ROADMAP "Next" item; config stubs for audio were already
+present, events system already had `kill`/`playerHit`; clean moment to land it.
+
+### What
+- New `src/audio/bus.ts`: `AudioBus` class wraps the Web Audio API with three
+  procedurally-synthesised sounds:
+  - **shoot** — square-wave blip, 820→340 Hz in 45 ms (fires every shot)
+  - **kill** — sine kick (130→38 Hz, 180 ms) + white-noise burst through a 1.8 kHz
+    highpass (90 ms)
+  - **playerHit** — sawtooth wail, 380→55 Hz descending over 380 ms
+- Lazy-init: `AudioContext` is created on the first sound call, naturally satisfying
+  browser user-gesture requirements.
+- Graceful degradation: no throw if `AudioContext` is absent (old/restricted browsers).
+- `AudioBus.init()` subscribes to `kill`, `playerHit`, and new `shoot` events;
+  returns a teardown fn.
+- Added `ShootEvent` to `GameEvents`; `world.ts` emits `shoot` when a bullet fires.
+- `config.audio.sfxEnabled` added; `AudioBus` checks it before constructing
+  `AudioContext`, so the setting takes effect without a reload.
+- Tweaks Menu: "SFX enabled" toggle wired into the Audio category.
+- `audioBus` singleton exported; exposed on `window.__game` for smoke/dev access.
+
+### Tests
+- 7 new tests in `tests/audio.test.ts` covering: init/teardown, shoot/kill/playerHit
+  playback, sfxEnabled=false silencing, destroy() cleans up event subscriptions,
+  missing AudioContext graceful-no-throw.
+- Total: **34 tests passing**.
+
+### Risks
+- Web Audio API synth sounds are tuned but untested on device — player may find
+  the shoot sound fatiguing at high fire rates. `sfxVolume` slider and `sfxEnabled`
+  toggle both available immediately from the Tweaks Menu.
+- No music yet — audio bus is SFX-only; music track remains a ROADMAP item.
+
+### Bundle
+- index.js: 12.87 KB gz (was 12.19 KB; +0.68 KB for the new audio module). Still
+  well within 500 KB budget.
+
 ## 0.2.0 — Iteration 2: Tweaks Menu
 
 - Added `src/tweaks/` module: state persistence, declarative tweak registry,
