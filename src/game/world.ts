@@ -5,6 +5,7 @@ import { Wanderers } from './enemies/wanderer';
 import { Grunts } from './enemies/grunt';
 import { Weavers } from './enemies/weaver';
 import { ScoreState } from './score';
+import { SpawnDirector } from './spawn-director';
 import { ParticleSystem } from '../fx/particles';
 import { ReactiveGrid } from '../fx/grid';
 import { ScreenFlash } from '../fx/screen-flash';
@@ -50,6 +51,7 @@ export class World {
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
   readonly score = new ScoreState();
+  readonly director = new SpawnDirector();
 
   lives: number = config.flow.startingLives;
   private gameState: GameState = 'playing';
@@ -120,6 +122,7 @@ export class World {
     this.shakeOffsetX = 0;
     this.shakeOffsetY = 0;
     this.score.reset();
+    this.director.reset();
     this.player.reset(this.renderer.viewport.halfW, this.renderer.viewport.halfH);
     this.wanderers.releaseAll();
     this.grunts.releaseAll();
@@ -245,13 +248,18 @@ export class World {
 
     this.collide();
 
-    this.spawnTimer -= sdt;
-    while (this.spawnTimer <= 0) {
-      this.spawnTimer +=
-        config.enemies.spawn.intervalSeconds / Math.max(0.01, config.flow.spawnRateMultiplier);
-      const total = this.wanderers.count + this.grunts.count + this.weavers.count;
-      if (total < config.enemies.spawn.maxAlive) {
-        this.spawnEnemy(w, h);
+    const total = this.wanderers.count + this.grunts.count + this.weavers.count;
+    if (config.spawnDirector.enabled) {
+      const types = this.director.tick(sdt, total);
+      for (const type of types) this.spawnEnemyOfType(type, w, h);
+    } else {
+      this.spawnTimer -= sdt;
+      while (this.spawnTimer <= 0) {
+        this.spawnTimer +=
+          config.enemies.spawn.intervalSeconds / Math.max(0.01, config.flow.spawnRateMultiplier);
+        if (total < config.enemies.spawn.maxAlive) {
+          this.spawnEnemy(w, h);
+        }
       }
     }
 
@@ -284,15 +292,21 @@ export class World {
     }
   }
 
-  private spawnEnemy(w: number, h: number): void {
+  private spawnAt(w: number, h: number): { x: number; y: number } {
     const min = config.enemies.spawn.minDistanceFromPlayer;
     const ps = this.player.state;
-    let x = 0, y = 0;
+    let x = defaultRng.range(40, w - 40);
+    let y = defaultRng.range(40, h - 40);
     for (let i = 0; i < 6; i++) {
       x = defaultRng.range(40, w - 40);
       y = defaultRng.range(40, h - 40);
       if (length(x - ps.x, y - ps.y) >= min) break;
     }
+    return { x, y };
+  }
+
+  private spawnEnemy(w: number, h: number): void {
+    const { x, y } = this.spawnAt(w, h);
     if (config.flow.newEnemyTypes) {
       const roll = defaultRng.next();
       if (roll < 0.5) {
@@ -305,6 +319,13 @@ export class World {
     } else {
       this.wanderers.spawn(x, y);
     }
+  }
+
+  private spawnEnemyOfType(type: import('./spawn-director').EnemyType, w: number, h: number): void {
+    const { x, y } = this.spawnAt(w, h);
+    if (type === 'grunt') this.grunts.spawn(x, y);
+    else if (type === 'weaver') this.weavers.spawn(x, y);
+    else this.wanderers.spawn(x, y);
   }
 
   private collide(): void {

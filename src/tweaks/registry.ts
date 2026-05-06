@@ -92,6 +92,10 @@ export function buildRegistry(): readonly Tweak[] {
   reg.push(slider('flow', 'flow.startingLives', 'Starting lives', 1, 9, 1));
   reg.push(slider('flow', 'score.multiplier.decayPerSecond', 'Mult decay/sec', 0, 4, 0.1));
   reg.push(toggle('flow', 'flow.newEnemyTypes', 'New enemy types (Grunt + Weaver)', true));
+  const directorTweak = toggle('flow', 'spawnDirector.enabled', 'Spawn director', true);
+  directorTweak.description =
+    'Escalating pressure over 2 min — spawn rate ramps, enemy mix shifts, random surges spike intensity.';
+  reg.push(directorTweak);
 
   // DEBUG
   reg.push(toggle('debug', 'debug.fpsOverlay', 'FPS overlay'));

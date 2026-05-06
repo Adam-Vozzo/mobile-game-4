@@ -26,6 +26,10 @@ change.
   128 BPM synthwave loop (kick/snare/hihat/bass/lead), all Web Audio API —
   no asset files. Beat-driven grid pulse + snare flash. `audio.musicEnabled`
   experimental toggle; `audio.musicReactivity` experimental toggle.
+- **Iteration 8: Spawn Director.** ✅ Landed in v0.8.0.
+  `SpawnDirector` class — difficulty curve (0→1 over 120 s), interpolated
+  spawn interval, escalating enemy mix, random surge bursts. Experimental
+  toggle `spawnDirector.enabled`.
 
 ## Next
 
@@ -33,8 +37,8 @@ change.
   feedback gets appended automatically.
 - 2–4 more enemy types: Snake (chains of segments), Black Hole (gravity well),
   Pinwheel (orbiting drones), Splitter (splits on death).
-- Spawn director: wave logic + tension curve.
 - Main menu shell.
+- Surge visual indicator — brief edge-glow or colour shift to signal surge state to player.
 
 ## Later
 

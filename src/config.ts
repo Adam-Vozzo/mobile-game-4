@@ -141,6 +141,27 @@ export interface AppConfig {
     newEnemyTypes: boolean;
   };
 
+  spawnDirector: {
+    /** Replace flat-rate spawning with an escalating difficulty curve (experimental). */
+    enabled: boolean;
+    /** Seconds to ramp from min to max difficulty. */
+    rampSeconds: number;
+    /** Spawn interval (seconds) at difficulty 0 (game start). */
+    maxInterval: number;
+    /** Spawn interval (seconds) at difficulty 1 (fully ramped). */
+    minInterval: number;
+    /** Simultaneous enemy cap at difficulty 0. */
+    minMaxAlive: number;
+    /** Simultaneous enemy cap at difficulty 1. */
+    maxMaxAlive: number;
+    /** Probability per second that a surge begins (outside of a surge). */
+    surgeChancePerSecond: number;
+    /** How long a surge lasts (seconds). */
+    surgeDuration: number;
+    /** Multiplier on spawn interval during a surge (<1 = faster). */
+    surgeIntervalScale: number;
+  };
+
   debug: {
     fpsOverlay: boolean;
     drawHitboxes: boolean;
@@ -152,7 +173,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.7.0',
+  buildVersion: '0.8.0',
 
   world: {
     width: 1600,
@@ -252,6 +273,18 @@ const _DEFAULTS: AppConfig = {
     spawnRateMultiplier: 1.0,
     startingLives: 3,
     newEnemyTypes: false,
+  },
+
+  spawnDirector: {
+    enabled: false,
+    rampSeconds: 120,
+    maxInterval: 1.4,
+    minInterval: 0.35,
+    minMaxAlive: 16,
+    maxMaxAlive: 32,
+    surgeChancePerSecond: 0.02,
+    surgeDuration: 4.0,
+    surgeIntervalScale: 0.3,
   },
 
   debug: {
