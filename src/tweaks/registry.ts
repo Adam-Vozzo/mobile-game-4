@@ -79,6 +79,10 @@ export function buildRegistry(): readonly Tweak[] {
   reg.push(slider('visual', 'juice.hitstopMs', 'Hitstop on kill', 0, 80, 1, 'ms', true));
   reg.push(toggle('visual', 'juice.slowMoOnBigKill', 'Slow-mo on big kill', true));
   reg.push(toggle('visual', 'juice.screenFlash', 'Screen flash on events', true));
+  const surgeIndicatorTweak = toggle('visual', 'juice.surgeIndicator', 'Surge edge glow', true);
+  surgeIndicatorTweak.description =
+    'Animated orange screen-edge glow during Spawn Director surge bursts. Requires Spawn Director on.';
+  reg.push(surgeIndicatorTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));

@@ -2,6 +2,53 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.9.0 — Iteration 9: Surge Visual Indicator (2026-05-07)
+
+**Choice: FEATURE** — No feedback to act on. Surge Visual Indicator is the first item
+in the ROADMAP "Next" list and directly serves the Spawn Director (iteration 8):
+when a surge fires, players felt the extra enemies but had no forewarning. An animated
+screen-edge glow + surge-start flash now communicates burst timing clearly.
+
+### What landed
+
+- **`src/fx/surge-glow.ts`** — `SurgeGlow` class.
+  - Draws 4 additive-blend edge strips (36 px thick, 60 px overshoot for shake coverage).
+  - `setSurging(active)` drives an intensity envelope (rise: 5/s, decay: 1.8/s).
+  - Alpha pulses at 2.5 Hz between 0.08 and 0.48 scaled by intensity.
+  - Geometry redrawn lazily only when viewport dimensions change.
+  - `clear()` instantly hides glow (called on game reset/retry).
+- **`src/engine/events.ts`** — Added `surgeChange: { active: boolean }` event for
+  future listeners (audio hit, future mode logic).
+- **`src/config.ts`** — Added `juice.surgeIndicator: boolean` (default `false`).
+- **`src/game/world.ts`** — `updateSurge()` private method detects `director.isSurging`
+  transitions, emits `surgeChange`, triggers a brief orange screen flash on surge start
+  (when `screenFlash` is also on), and drives `surgeGlow`. Glow steps in playing,
+  death-cam, and hitstop paths so it fades cleanly in all states.
+- **`src/tweaks/registry.ts`** — `juice.surgeIndicator` toggle under Visual Juice
+  (experimental, default off, with description).
+- **`buildVersion`** bumped to `0.9.0`.
+
+### Tests
+
+- 5 new tests in `tests/surge-glow.test.ts`: starts invisible, rises when surging,
+  decays after surge ends, clear() resets, geometry redrawn only on viewport change.
+- Total: **57 tests passing**.
+
+### Toggles added
+
+- `juice.surgeIndicator` — experimental, default **off**.
+  Description: "Animated orange screen-edge glow during Spawn Director surge bursts. Requires Spawn Director on."
+
+### Risks
+
+- Glow is purely additive so it has zero impact on legibility (adds brightness, never darkens).
+- `surgeChange` event adds a marginal allocation cost (one Set lookup per transition,
+  which is rare — every ~50 s on average).
+
+### Bundle
+
+- index.js: 17.99 KB gz (was 17.49 KB; +0.50 KB for SurgeGlow module).
+
 ## 0.8.0 — Iteration 8: Spawn Director (2026-05-06)
 
 **Choice: FEATURE** — No feedback to act on. Spawn Director is the top remaining

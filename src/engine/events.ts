@@ -36,12 +36,17 @@ export interface MusicBeatEvent {
   step: number;
 }
 
+export interface SurgeChangeEvent {
+  active: boolean;
+}
+
 export interface GameEvents {
   kill: KillEvent;
   playerHit: PlayerHitEvent;
   shoot: ShootEvent;
   gameOver: GameOverEvent;
   musicBeat: MusicBeatEvent;
+  surgeChange: SurgeChangeEvent;
 }
 
 type Handler<E> = (e: E) => void;

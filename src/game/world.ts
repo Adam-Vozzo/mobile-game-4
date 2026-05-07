@@ -9,6 +9,7 @@ import { SpawnDirector } from './spawn-director';
 import { ParticleSystem } from '../fx/particles';
 import { ReactiveGrid } from '../fx/grid';
 import { ScreenFlash } from '../fx/screen-flash';
+import { SurgeGlow } from '../fx/surge-glow';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -50,6 +51,7 @@ export class World {
   readonly particles: ParticleSystem;
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
+  readonly surgeGlow: SurgeGlow;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -57,6 +59,7 @@ export class World {
   private gameState: GameState = 'playing';
 
   private spawnTimer = 0.5;
+  private surgeWasActive = false;
   private shakeAmp = 0;
   private shakeOffsetX = 0;
   private shakeOffsetY = 0;
@@ -81,6 +84,7 @@ export class World {
     this.weavers = new Weavers(renderer.layers.vector);
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
     this.flash = new ScreenFlash(renderer.layers.overlay);
+    this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
 
     events.on('musicBeat', ({ isKick }) => {
       if (!config.audio.musicReactivity) return;
@@ -130,6 +134,8 @@ export class World {
     this.bullets.releaseAll();
     this.particles.clear();
     this.flash.clear();
+    this.surgeGlow.clear();
+    this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
 
@@ -152,6 +158,7 @@ export class World {
       this.grid.step(ddt);
       this.decayShake(dt);
       this.flash.step(dt);
+      if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
 
@@ -162,6 +169,7 @@ export class World {
       this.hitstopFrames--;
       this.decayShake(dt);
       this.flash.step(dt);
+      if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
 
@@ -252,6 +260,7 @@ export class World {
     if (config.spawnDirector.enabled) {
       const types = this.director.tick(sdt, total);
       for (const type of types) this.spawnEnemyOfType(type, w, h);
+      this.updateSurge();
     } else {
       this.spawnTimer -= sdt;
       while (this.spawnTimer <= 0) {
@@ -269,6 +278,9 @@ export class World {
     this.decayShake(dt);
     this.score.step(sdt);
     this.flash.step(dt);
+    if (config.juice.surgeIndicator) {
+      this.surgeGlow.step(dt, this.renderer.viewport);
+    }
   }
 
   render(_alpha: number): void {
@@ -279,6 +291,18 @@ export class World {
 
   onResize(): void {
     this.grid.layout(this.renderer.viewport);
+  }
+
+  private updateSurge(): void {
+    const nowSurging = this.director.isSurging;
+    if (nowSurging !== this.surgeWasActive) {
+      this.surgeWasActive = nowSurging;
+      events.emit('surgeChange', { active: nowSurging });
+      if (nowSurging && config.juice.screenFlash) {
+        this.flash.flash(0xff3300, 0.28, 0.4);
+      }
+    }
+    this.surgeGlow.setSurging(nowSurging && config.juice.surgeIndicator);
   }
 
   private decayShake(dt: number): void {
