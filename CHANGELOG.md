@@ -2,6 +2,28 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.16.0 — Iteration 16: README Design+Roadmap Embed (2026-05-07)
+
+**Choice: FEEDBACK RESPONSE** — PLAYTEST_NOTES contained one unaddressed entry:
+"Include the DESIGN.md and ROADMAP.md content in the README.md file."
+No other feedback, bugs, or open PRs; this is the clear highest-priority action.
+
+**What:**
+- `README.md` rewritten to embed the full Design section (vision, pillars,
+  V1 mode, platform, touch-controls rationale, aesthetic anchors, references,
+  out-of-scope) and full Roadmap section (completed v0.1.0–v0.15.0 history,
+  Next, Later, Ideas) directly in the document.
+- Status line updated from stale "Iteration 1 — vertical slice" to
+  "Current build: v0.15.0".
+- Project-docs list converted to a table for scanability.
+- `DESIGN.md` and `ROADMAP.md` retained as canonical standalone files
+  (development loop depends on them).
+- PLAYTEST_NOTES entry marked addressed.
+
+**Risks:** None — documentation-only change.
+
+**Toggles added/removed:** none.
+
 ## 0.15.0 — Iteration 15: Camera Punch (2026-05-07)
 
 **Choice: POLISH** — No feedback, no bugs, no open PRs. ROADMAP.Next explicitly
