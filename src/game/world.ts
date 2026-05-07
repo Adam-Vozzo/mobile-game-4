@@ -764,7 +764,7 @@ export class World {
       this.timeScale = SLOW_MO_SCALE;
       this.slowMoTimer = SLOW_MO_DURATION;
     }
-    events.emit('kill', { x, y, r: 0.67, g: 0, b: 1, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 0.67, g: 0, b: 1, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private applyBlackHoleGravity(
@@ -841,7 +841,7 @@ export class World {
     const spread = Math.PI / 6;
     this.shards.spawn(x, y, baseAngle - spread);
     this.shards.spawn(x, y, baseAngle + spread);
-    events.emit('kill', { x, y, r: 1, g: 0.87, b: 0, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 1, g: 0.87, b: 0, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private onSnakeDamaged(x: number, y: number): void {
@@ -881,7 +881,7 @@ export class World {
       this.timeScale = SLOW_MO_SCALE;
       this.slowMoTimer = SLOW_MO_DURATION;
     }
-    events.emit('kill', { x, y, r: 0.8, g: 0.27, b: 1, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 0.8, g: 0.27, b: 1, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private killSnake(i: number, x: number, y: number): void {
@@ -903,7 +903,7 @@ export class World {
       this.timeScale = SLOW_MO_SCALE;
       this.slowMoTimer = SLOW_MO_DURATION;
     }
-    events.emit('kill', { x, y, r: 0, g: 1, b: 0.67, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 0, g: 1, b: 0.67, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private killShard(i: number, x: number, y: number): void {
@@ -921,7 +921,7 @@ export class World {
       const frames = Math.max(1, Math.round(config.juice.hitstopMs / (TIMING.SIM_DT * 1000)));
       this.hitstopFrames = Math.max(this.hitstopFrames, frames);
     }
-    events.emit('kill', { x, y, r: 1, g: 0.53, b: 0, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 1, g: 0.53, b: 0, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private killWanderer(i: number, x: number, y: number): void {
@@ -943,7 +943,7 @@ export class World {
       this.timeScale = SLOW_MO_SCALE;
       this.slowMoTimer = SLOW_MO_DURATION;
     }
-    events.emit('kill', { x, y, r: 1, g: 0.17, b: 0.84, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 1, g: 0.17, b: 0.84, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private killGrunt(i: number, x: number, y: number): void {
@@ -965,7 +965,7 @@ export class World {
       this.timeScale = SLOW_MO_SCALE;
       this.slowMoTimer = SLOW_MO_DURATION;
     }
-    events.emit('kill', { x, y, r: 1, g: 0.47, b: 0, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 1, g: 0.47, b: 0, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private killWeaver(i: number, x: number, y: number): void {
@@ -987,7 +987,7 @@ export class World {
       this.timeScale = SLOW_MO_SCALE;
       this.slowMoTimer = SLOW_MO_DURATION;
     }
-    events.emit('kill', { x, y, r: 0.67, g: 1, b: 0, pointValue: cfg.pointValue });
+    events.emit('kill', { x, y, r: 0.67, g: 1, b: 0, pointValue: cfg.pointValue, multiplier: this.score.multiplier });
   }
 
   private onPlayerHit(ex: number, ey: number): void {

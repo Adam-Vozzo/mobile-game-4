@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { config, DEFAULTS } from '../src/config';
+import { ComboCounter } from '../src/ui/combo-counter';
 
 // Fake DOM element returned by document.createElement.
 type FakeEl = {
@@ -32,11 +33,9 @@ const makeHost = () => ({
 });
 
 describe('ui/combo-counter', () => {
-  let ComboCounter: typeof import('../src/ui/combo-counter').ComboCounter;
   let fakeEl: FakeEl;
 
-  beforeEach(async () => {
-    vi.resetModules();
+  beforeEach(() => {
     // Reset config to defaults before each test.
     config.juice.comboCounter = DEFAULTS.juice.comboCounter;
 
@@ -44,8 +43,6 @@ describe('ui/combo-counter', () => {
     vi.stubGlobal('document', {
       createElement: vi.fn(() => fakeEl),
     });
-
-    ({ ComboCounter } = await import('../src/ui/combo-counter'));
   });
 
   afterEach(() => {

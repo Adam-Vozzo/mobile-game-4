@@ -66,14 +66,19 @@ change.
   increases. CSS keyframe animation (scale spring + fade). `juice.comboCounter`
   experimental toggle.
 
+- **Iteration 18: Floating Score Delta Popups.** ✅ Landed in v0.18.0.
+  `+N` labels drift upward from each kill, tinted to the enemy colour. Shows
+  the full multiplied value (`pointValue × multiplier`). `juice.scorePopups`
+  experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - PROMOTE/DEMOTE pass: promote well-liked experimental enemy toggles to
   default-on once playtest data arrives.
-- Polish: floating score-delta popups ("+200" drifting up from the kill
-  position, tinted by enemy colour).
+- Polish: hitstop screen-distortion (brief radial warp at kill point, synced
+  to the hitstop freeze frame).
 
 ## Later
 

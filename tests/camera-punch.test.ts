@@ -22,6 +22,7 @@ const KILL_25 = {
   g: 0,
   b: 1,
   pointValue: 25,
+  multiplier: 1,
 };
 
 const KILL_200 = {
@@ -31,6 +32,7 @@ const KILL_200 = {
   g: 0,
   b: 1,
   pointValue: 200,
+  multiplier: 1,
 };
 
 describe('fx/camera-punch', () => {

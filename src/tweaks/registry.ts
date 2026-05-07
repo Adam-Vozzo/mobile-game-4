@@ -92,6 +92,10 @@ export function buildRegistry(): readonly Tweak[] {
   comboCounterTweak.description =
     'Shows a large ×N in screen centre when the kill-chain multiplier increases. Hot-yellow glow, pop + fade animation.';
   reg.push(comboCounterTweak);
+  const scorePopupsTweak = toggle('visual', 'juice.scorePopups', 'Score delta pop-ups', true);
+  scorePopupsTweak.description =
+    'Floating "+N" labels drift upward from each kill, tinted to the enemy colour. Includes multiplier in the displayed value.';
+  reg.push(scorePopupsTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));

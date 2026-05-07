@@ -17,6 +17,7 @@ import { musicEngine } from './audio/music';
 import { GameOverOverlay } from './ui/game-over';
 import { MainMenu } from './ui/main-menu';
 import { ComboCounter } from './ui/combo-counter';
+import { ScorePopup } from './ui/score-popup';
 import { events } from './engine/events';
 
 function makeScheme(s: ControlScheme): ControlSchemeImpl {
@@ -44,6 +45,7 @@ async function main(): Promise<void> {
     () => world.entityCount(),
   );
   const comboCounter = new ComboCounter(host);
+  new ScorePopup(host);
 
   const controls = new ControlsDispatcher();
   const input = makeInputState();

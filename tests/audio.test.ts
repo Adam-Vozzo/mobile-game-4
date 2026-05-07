@@ -105,7 +105,7 @@ describe('AudioBus', () => {
     const bus = new AudioBus();
     const teardown = bus.init();
 
-    events.emit('kill', { x: 200, y: 200, r: 1, g: 0, b: 0.8, pointValue: 25 });
+    events.emit('kill', { x: 200, y: 200, r: 1, g: 0, b: 0.8, pointValue: 25, multiplier: 1 });
 
     expect(stub.createOscillator).toHaveBeenCalled();
     expect(stub.createBuffer).toHaveBeenCalled();

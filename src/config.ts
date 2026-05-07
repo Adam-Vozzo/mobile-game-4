@@ -168,6 +168,8 @@ export interface AppConfig {
     cameraPunchMagnitude: number;
     /** Large animated ×N pop-up in screen centre when the kill-chain multiplier increases (experimental). */
     comboCounter: boolean;
+    /** Floating "+N" labels drifting up from each kill, tinted to the enemy colour (experimental). */
+    scorePopups: boolean;
   };
 
   grid: {
@@ -240,7 +242,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.15.0',
+  buildVersion: '0.18.0',
 
   world: {
     width: 1600,
@@ -361,6 +363,7 @@ const _DEFAULTS: AppConfig = {
     cameraPunch: false,
     cameraPunchMagnitude: 20,
     comboCounter: false,
+    scorePopups: false,
   },
 
   grid: {
