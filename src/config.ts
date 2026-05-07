@@ -69,6 +69,20 @@ export interface AppConfig {
       waveAmp: number;
       pointValue: number;
     };
+    blackHole: {
+      radius: number;
+      speed: number;
+      hp: number;
+      /** max simultaneously alive */
+      maxConcurrent: number;
+      /** radius of gravitational influence in world units */
+      influenceRadius: number;
+      /** peak gravitational acceleration on bullets (px/s²) at distance 0; linear falloff to 0 at influenceRadius */
+      bulletGravityStrength: number;
+      /** peak gravitational acceleration on player (px/s²) */
+      playerGravityStrength: number;
+      pointValue: number;
+    };
     spawn: {
       /** seconds between spawns at start; will be modulated by spawn director later */
       intervalSeconds: number;
@@ -141,6 +155,8 @@ export interface AppConfig {
     startingLives: number;
     /** Enable Grunt and Weaver enemy types alongside Wanderers (experimental). */
     newEnemyTypes: boolean;
+    /** Enable Black Hole enemy — gravity well that curves bullets and pulls the player (experimental). */
+    blackHoleEnemy: boolean;
   };
 
   spawnDirector: {
@@ -175,7 +191,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.9.0',
+  buildVersion: '0.10.0',
 
   world: {
     width: 1600,
@@ -221,6 +237,16 @@ const _DEFAULTS: AppConfig = {
       waveFreq: 2.5,
       waveAmp: 0.7,
       pointValue: 75,
+    },
+    blackHole: {
+      radius: 22,
+      speed: 28,
+      hp: 5,
+      maxConcurrent: 3,
+      influenceRadius: 160,
+      bulletGravityStrength: 2500,
+      playerGravityStrength: 1500,
+      pointValue: 200,
     },
     spawn: {
       intervalSeconds: 0.8,
@@ -276,6 +302,7 @@ const _DEFAULTS: AppConfig = {
     spawnRateMultiplier: 1.0,
     startingLives: 3,
     newEnemyTypes: false,
+    blackHoleEnemy: false,
   },
 
   spawnDirector: {

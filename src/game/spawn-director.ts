@@ -1,7 +1,7 @@
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 
-export type EnemyType = 'wanderer' | 'grunt' | 'weaver';
+export type EnemyType = 'wanderer' | 'grunt' | 'weaver' | 'black-hole';
 
 /**
  * Spawn Director: escalates enemy pressure over time via a smooth difficulty
@@ -74,12 +74,15 @@ export class SpawnDirector {
     const gruntW = smoothstep(0.2, 0.7, t) * 0.3;
     // Weaver weight rises from 0 at t=0.45 to 0.3 at t=1.0.
     const weaverW = smoothstep(0.45, 1.0, t) * 0.3;
-    const wandererW = 1 - gruntW - weaverW;
+    // Black hole weight rises from 0 at t=0.6 to 0.07 at t=1.0 (rare).
+    const bhW = config.flow.blackHoleEnemy ? smoothstep(0.6, 1.0, t) * 0.07 : 0;
+    const wandererW = Math.max(0, 1 - gruntW - weaverW - bhW);
 
     const roll = defaultRng.next();
     if (roll < wandererW) return 'wanderer';
     if (roll < wandererW + gruntW) return 'grunt';
-    return 'weaver';
+    if (roll < wandererW + gruntW + weaverW) return 'weaver';
+    return 'black-hole';
   }
 }
 
