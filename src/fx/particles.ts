@@ -38,6 +38,10 @@ export class ParticleSystem {
       sprite.anchor.set(0.5);
       sprite.blendMode = BLEND_MODES.ADD;
       sprite.visible = false;
+      // ParticleContainer batches all children regardless of `visible`, so
+      // unspawned/dead sprites must also be transparent. Otherwise 4096 stacked
+      // white sprites pile up at (0,0) — the "mysterious top-left blob".
+      sprite.alpha = 0;
       container.addChild(sprite);
       return {
         sprite,
@@ -98,6 +102,7 @@ export class ParticleSystem {
       p.life -= dt;
       if (p.life <= 0) {
         p.sprite.visible = false;
+        p.sprite.alpha = 0;
         this.pool.releaseAt(i);
         continue;
       }
@@ -119,6 +124,7 @@ export class ParticleSystem {
     for (let i = this.pool.size - 1; i >= 0; i--) {
       const p = this.pool.items[i]!;
       p.sprite.visible = false;
+      p.sprite.alpha = 0;
       this.pool.releaseAt(i);
     }
   }
