@@ -2,6 +2,7 @@ import type { Viewport } from '../../types';
 import { config } from '../../config';
 import { clamp } from '../../engine/math';
 import type { ControlSchemeImpl, InputState } from '../controls';
+import { isMenuEvent } from '../controls';
 
 /**
  * Classic virtual twin-sticks: left-half = move, right-half = aim/fire.
@@ -53,6 +54,7 @@ export class VirtualTwinSticksScheme implements ControlSchemeImpl {
   }
 
   private onDown(e: PointerEvent): void {
+    if (isMenuEvent(e)) return;
     const isLeft = this.isLeftSide(e.clientX);
     const stick = isLeft ? this.left : this.right;
     if (stick.active) return; // ignore secondary touches on same side

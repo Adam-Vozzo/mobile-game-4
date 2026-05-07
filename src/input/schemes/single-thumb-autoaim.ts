@@ -1,6 +1,7 @@
 import type { Viewport } from '../../types';
 import { config } from '../../config';
 import type { ControlSchemeImpl, InputState } from '../controls';
+import { isMenuEvent } from '../controls';
 import { clamp } from '../../engine/math';
 
 /**
@@ -52,6 +53,9 @@ export class SingleThumbAutoAimScheme implements ControlSchemeImpl {
   }
 
   private onDown(e: PointerEvent): void {
+    // Skip events that target the Tweaks Menu — its native sliders / selects
+    // need pointerdown's default behaviour, which we'd otherwise cancel below.
+    if (isMenuEvent(e)) return;
     // First touch wins. Multi-touch is reserved for future menu gestures.
     if (this.active) return;
     this.active = true;

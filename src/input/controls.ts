@@ -71,3 +71,15 @@ export class ControlsDispatcher {
 export function makeInputState(): InputState {
   return { ...ZERO_INPUT };
 }
+
+/**
+ * True if the pointer event targets the Tweaks Menu (or any descendant of it).
+ * Schemes use this to skip events whose target is a native UI control —
+ * `<input type="range">`, `<select>`, etc. — that needs pointerdown's default
+ * behaviour to drag/open. Without this, scheme `preventDefault` calls on the
+ * host break those controls.
+ */
+export function isMenuEvent(e: PointerEvent): boolean {
+  const t = e.target;
+  return t instanceof Element && !!t.closest('.tweaks-root');
+}
