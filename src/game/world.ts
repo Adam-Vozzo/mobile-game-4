@@ -15,6 +15,7 @@ import { ReactiveGrid } from '../fx/grid';
 import { ScreenFlash } from '../fx/screen-flash';
 import { SurgeGlow } from '../fx/surge-glow';
 import { CameraPunch } from '../fx/camera-punch';
+import { HitstopDistortion } from '../fx/hitstop-distortion';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -68,6 +69,7 @@ export class World {
   readonly flash: ScreenFlash;
   readonly surgeGlow: SurgeGlow;
   readonly cameraPunch: CameraPunch;
+  readonly distortion: HitstopDistortion;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -107,6 +109,7 @@ export class World {
     this.flash = new ScreenFlash(renderer.layers.overlay);
     this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
     this.cameraPunch = new CameraPunch(this.player.state);
+    this.distortion = new HitstopDistortion(renderer.layers.overlay);
 
     events.on('musicBeat', ({ isKick }) => {
       if (!config.audio.musicReactivity) return;
@@ -174,6 +177,7 @@ export class World {
     this.flash.clear();
     this.surgeGlow.clear();
     this.cameraPunch.clear();
+    this.distortion.clear();
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -198,6 +202,7 @@ export class World {
       this.decayShake(dt);
       this.cameraPunch.step(dt);
       this.flash.step(dt);
+      this.distortion.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -210,6 +215,7 @@ export class World {
       this.decayShake(dt);
       this.cameraPunch.step(dt);
       this.flash.step(dt);
+      this.distortion.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -356,6 +362,7 @@ export class World {
     this.cameraPunch.step(dt);
     this.score.step(sdt);
     this.flash.step(dt);
+    this.distortion.step(dt);
     if (config.juice.surgeIndicator) {
       this.surgeGlow.step(dt, this.renderer.viewport);
     }

@@ -96,6 +96,10 @@ export function buildRegistry(): readonly Tweak[] {
   scorePopupsTweak.description =
     'Floating "+N" labels drift upward from each kill, tinted to the enemy colour. Includes multiplier in the displayed value.';
   reg.push(scorePopupsTweak);
+  const hitstopDistortionTweak = toggle('visual', 'juice.hitstopDistortion', 'Kill shockwave ring', true);
+  hitstopDistortionTweak.description =
+    'Expanding radial ring at each kill position, synced to the hitstop freeze frame. Tinted to the enemy colour, fades over ~380 ms.';
+  reg.push(hitstopDistortionTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));

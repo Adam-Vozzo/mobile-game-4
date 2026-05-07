@@ -71,14 +71,19 @@ change.
   the full multiplied value (`pointValue × multiplier`). `juice.scorePopups`
   experimental toggle.
 
+- **Iteration 19: Kill Shockwave Ring.** ✅ Landed in v0.19.0.
+  Expanding radial ring at each kill position, tinted to the enemy colour,
+  fades over 380 ms with additive blend. Fires on the same tick as hitstop.
+  `juice.hitstopDistortion` experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- PROMOTE/DEMOTE pass: promote well-liked experimental enemy toggles to
+- PROMOTE/DEMOTE pass: promote well-liked experimental toggles to
   default-on once playtest data arrives.
-- Polish: hitstop screen-distortion (brief radial warp at kill point, synced
-  to the hitstop freeze frame).
+- Polish: player death shockwave (larger ring burst on player hit, scaled to
+  remaining lives).
 
 ## Later
 
