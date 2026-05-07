@@ -35,3 +35,32 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge --squash --auto "$PR_URL"
+
+      # Bot-driven squash merges run under GITHUB_TOKEN, so the resulting
+      # push to `main` does not fire `deploy-pages.yml` (per GitHub's rule
+      # that GITHUB_TOKEN-driven events don't trigger downstream workflows).
+      # `workflow_dispatch` is documented as an exception, so once the
+      # auto-merge completes we explicitly dispatch the deploy.
+      - name: Dispatch deploy-pages once merged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          for i in $(seq 1 60); do
+            STATE=$(gh pr view "$PR_URL" --json merged,state -q '.merged,.state' || echo "false")
+            MERGED=$(echo "$STATE" | head -1)
+            CLOSED=$(echo "$STATE" | tail -1)
+            if [ "$MERGED" = "true" ]; then
+              echo "PR merged — dispatching deploy-pages."
+              gh workflow run deploy-pages.yml --ref main
+              exit 0
+            fi
+            if [ "$CLOSED" = "CLOSED" ]; then
+              echo "PR closed without merge — skipping deploy."
+              exit 0
+            fi
+            echo "Waiting for auto-merge ($i/60)..."
+            sleep 30
+          done
+          echo "Timed out after 30 min waiting for auto-merge."
+          exit 1
