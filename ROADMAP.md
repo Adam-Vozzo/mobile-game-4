@@ -41,11 +41,16 @@ change.
   Yellow square (2 HP) that splits into 2 fast orange Shards on death. Shards
   home aggressively. `flow.splitterEnemy` experimental toggle.
 
+- **Iteration 12: Snake Enemy.** ✅ Landed in v0.12.0.
+  Teal segmented enemy (2 HP): body absorbs bullets, only head is killable.
+  Position-history ring-buffer drives segment following. `flow.snakeEnemy`
+  experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- Remaining new enemy types: Snake (chains of segments), Pinwheel (orbiting drones).
+- Remaining new enemy types: Pinwheel (rotating core + orbiting drones).
 - Main menu shell.
 
 ## Later

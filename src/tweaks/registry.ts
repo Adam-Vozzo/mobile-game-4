@@ -104,6 +104,10 @@ export function buildRegistry(): readonly Tweak[] {
   splitterTweak.description =
     'Yellow square enemy (2 HP) that splits into two fast orange Shards on death. Shards home aggressively on the player.';
   reg.push(splitterTweak);
+  const snakeTweak = toggle('flow', 'flow.snakeEnemy', 'Snake enemy', true);
+  snakeTweak.description =
+    'Teal segmented enemy (2 HP): body segments absorb bullets — only the head is vulnerable. Forces you to outmanoeuvre the trail to get a clear shot.';
+  reg.push(snakeTweak);
   const directorTweak = toggle('flow', 'spawnDirector.enabled', 'Spawn director', true);
   directorTweak.description =
     'Escalating pressure over 2 min — spawn rate ramps, enemy mix shifts, random surges spike intensity.';

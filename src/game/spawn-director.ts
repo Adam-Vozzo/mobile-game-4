@@ -1,7 +1,7 @@
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 
-export type EnemyType = 'wanderer' | 'grunt' | 'weaver' | 'black-hole' | 'splitter';
+export type EnemyType = 'wanderer' | 'grunt' | 'weaver' | 'black-hole' | 'splitter' | 'snake';
 
 /**
  * Spawn Director: escalates enemy pressure over time via a smooth difficulty
@@ -78,13 +78,16 @@ export class SpawnDirector {
     const bhW = config.flow.blackHoleEnemy ? smoothstep(0.6, 1.0, t) * 0.07 : 0;
     // Splitter weight rises from 0 at t=0.3 to 0.15 at t=0.8 (moderate presence).
     const splitterW = config.flow.splitterEnemy ? smoothstep(0.3, 0.8, t) * 0.15 : 0;
-    const wandererW = Math.max(0, 1 - gruntW - weaverW - bhW - splitterW);
+    // Snake weight rises from 0 at t=0.4 to 0.12 at t=0.9 (mid-to-late game).
+    const snakeW = config.flow.snakeEnemy ? smoothstep(0.4, 0.9, t) * 0.12 : 0;
+    const wandererW = Math.max(0, 1 - gruntW - weaverW - bhW - splitterW - snakeW);
 
     const roll = defaultRng.next();
     if (roll < wandererW) return 'wanderer';
     if (roll < wandererW + gruntW) return 'grunt';
     if (roll < wandererW + gruntW + weaverW) return 'weaver';
     if (roll < wandererW + gruntW + weaverW + splitterW) return 'splitter';
+    if (roll < wandererW + gruntW + weaverW + splitterW + snakeW) return 'snake';
     return 'black-hole';
   }
 }

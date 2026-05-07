@@ -182,3 +182,34 @@ function dart(g: Graphics, r: number): void {
   g.lineTo(-r, r * 0.6);
   g.lineTo(r * 1.3, 0);
 }
+
+export function drawSnakeHead(g: Graphics, color = 0x00ffaa): void {
+  g.clear();
+  const r = 13;
+  g.lineStyle({ width: 8, color, alpha: 0.16 });
+  snakeArrow(g, r);
+  g.lineStyle({ width: 4, color, alpha: 0.5 });
+  snakeArrow(g, r);
+  g.lineStyle({ width: 1.5, color: 0xffffff, alpha: 1 });
+  snakeArrow(g, r);
+}
+
+function snakeArrow(g: Graphics, r: number): void {
+  g.moveTo(r * 1.4, 0);
+  g.lineTo(-r, -r * 0.65);
+  g.lineTo(-r * 0.35, 0);
+  g.lineTo(-r, r * 0.65);
+  g.lineTo(r * 1.4, 0);
+}
+
+export function drawSnakeSegment(g: Graphics, segIndex: number, totalSegs: number, color = 0x00ffaa): void {
+  g.clear();
+  const t = totalSegs > 1 ? segIndex / (totalSegs - 1) : 0;
+  const r = Math.round(10 - t * 5); // 10 near head → 5 at tail
+  g.lineStyle({ width: 7, color, alpha: 0.12 - t * 0.06 });
+  g.drawCircle(0, 0, r);
+  g.lineStyle({ width: 3, color, alpha: 0.4 - t * 0.2 });
+  g.drawCircle(0, 0, r);
+  g.lineStyle({ width: 1, color: 0xffffff, alpha: 0.9 - t * 0.4 });
+  g.drawCircle(0, 0, r);
+}
