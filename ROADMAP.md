@@ -61,14 +61,19 @@ change.
   Underdamped spring return with subtle overshoot. `juice.cameraPunch`
   experimental toggle + `juice.cameraPunchMagnitude` slider.
 
+- **Iteration 17: Combo Counter Visual.** ✅ Landed in v0.17.0.
+  Large hot-yellow `×N` pop-up centred on screen when the kill-chain multiplier
+  increases. CSS keyframe animation (scale spring + fade). `juice.comboCounter`
+  experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - PROMOTE/DEMOTE pass: promote well-liked experimental enemy toggles to
   default-on once playtest data arrives.
-- Polish: kill-chain combo counter visual (on-screen streak number that
-  pops in sync with multiplier gains).
+- Polish: floating score-delta popups ("+200" drifting up from the kill
+  position, tinted by enemy colour).
 
 ## Later
 

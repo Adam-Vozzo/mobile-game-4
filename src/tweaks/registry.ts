@@ -88,6 +88,10 @@ export function buildRegistry(): readonly Tweak[] {
     'Directional camera displacement toward each kill, beat-synced to the nearest drum hit. Fires immediately when music is off.';
   reg.push(cameraPunchTweak);
   reg.push(slider('visual', 'juice.cameraPunchMagnitude', 'Camera punch magnitude', 5, 50, 1, 'px'));
+  const comboCounterTweak = toggle('visual', 'juice.comboCounter', 'Combo chain pop-up', true);
+  comboCounterTweak.description =
+    'Shows a large ×N in screen centre when the kill-chain multiplier increases. Hot-yellow glow, pop + fade animation.';
+  reg.push(comboCounterTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));

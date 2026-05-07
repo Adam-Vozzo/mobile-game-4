@@ -2,6 +2,43 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.17.0 — Iteration 17: Combo Counter Visual (2026-05-07)
+
+**Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next explicitly
+lists "kill-chain combo counter visual" as the top polish item; all other
+PROMOTE/DEMOTE decisions need playtest data that hasn't arrived yet.
+
+**What:**
+- `ComboCounter` class in `src/ui/combo-counter.ts`.
+  - Tracks the integer kill-chain multiplier each render frame.
+  - When `multiplier` increases **and** is greater than 1, triggers the popup.
+  - Shows a hot-yellow `×N` centered on screen (z-index 80, below tweaks menu
+    at 1000, above the vector layer).
+  - CSS `@keyframes combo-pop`: scale 0.25 → 1.28 → 0.92 → 1.05 → 1.0 with
+    opacity fade-out over 1.4 s (cubic-bezier spring feel). Uses
+    `void el.offsetWidth` reflow trick to restart the keyframe on rapid chains.
+  - `reset()` on game-start and return-to-menu clears any lingering animation
+    and resets the last-seen multiplier to 1.
+- Config: `juice.comboCounter` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge.
+- 9 new tests in `tests/combo-counter.test.ts`: toggle guard, mult-increase
+  trigger, mult-1 no-trigger, mult-decrease no-trigger, text content, reset
+  re-enables, destroy removes element, re-trigger after decay, fade-timer
+  cancellation on reset.
+- Total: **125 tests** (was 116).
+- Bundle: minimal increase (< 0.2 KB gzip — pure DOM/CSS, no new GL code).
+
+**Risks:**
+- The `void offsetWidth` reflow trick is a well-known CSS pattern but adds a
+  micro-stutter on the frame the popup fires. At 60 fps this is ≤ 16 ms;
+  acceptable. No hitstop or slow-mo interaction needed since the popup is
+  DOM-side, independent of the WebGL frame.
+- Center-screen placement may obscure the player ship during combat. If
+  playtesting finds this disruptive, top-center or score-adjacent placement
+  is a one-line CSS change.
+
+**Toggles added:** `juice.comboCounter` (experimental, default off).
+
 ## 0.16.0 — Iteration 16: README Design+Roadmap Embed (2026-05-07)
 
 **Choice: FEEDBACK RESPONSE** — PLAYTEST_NOTES contained one unaddressed entry:

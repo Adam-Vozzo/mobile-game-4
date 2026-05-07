@@ -16,6 +16,7 @@ import { audioBus } from './audio/bus';
 import { musicEngine } from './audio/music';
 import { GameOverOverlay } from './ui/game-over';
 import { MainMenu } from './ui/main-menu';
+import { ComboCounter } from './ui/combo-counter';
 import { events } from './engine/events';
 
 function makeScheme(s: ControlScheme): ControlSchemeImpl {
@@ -42,6 +43,7 @@ async function main(): Promise<void> {
     () => world.particles.count,
     () => world.entityCount(),
   );
+  const comboCounter = new ComboCounter(host);
 
   const controls = new ControlsDispatcher();
   const input = makeInputState();
@@ -52,12 +54,14 @@ async function main(): Promise<void> {
   window.addEventListener('orientationchange', () => world.onResize());
 
   const startGame = (): void => {
+    comboCounter.reset();
     world.reset();
     loop.setPaused(false);
     musicEngine.start();
   };
 
   const returnToMenu = (): void => {
+    comboCounter.reset();
     world.reset();
     loop.setPaused(true);
     musicEngine.stop();
@@ -79,6 +83,7 @@ async function main(): Promise<void> {
     render: (alpha) => {
       world.render(alpha);
       hud.update(world.score, lastFrame, world.lives);
+      comboCounter.update(world.score.multiplier);
     },
     onFrame: (info) => {
       lastFrame = info;

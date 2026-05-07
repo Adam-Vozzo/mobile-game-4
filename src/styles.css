@@ -684,3 +684,40 @@ canvas {
   color: rgba(0, 255, 247, 0.25);
   text-transform: uppercase;
 }
+
+/* ─── Combo counter ─────────────────────────────────────────────────── */
+
+#combo-counter {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: clamp(52px, 12vw, 104px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffff66;
+  text-shadow:
+    0 0 16px #ffff66,
+    0 0 40px #ff8800,
+    0 0 80px rgba(255, 136, 0, 0.4);
+  pointer-events: none;
+  user-select: none;
+  z-index: 80;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+@keyframes combo-pop {
+  0%   { opacity: 0;   transform: translate(-50%, -50%) scale(0.25); }
+  18%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.28); }
+  32%  { opacity: 1;   transform: translate(-50%, -50%) scale(0.92); }
+  46%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.05); }
+  60%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.0);  }
+  80%  { opacity: 0.9; transform: translate(-50%, -50%) scale(1.0);  }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(1.08); }
+}
+
+#combo-counter.combo-pop {
+  animation: combo-pop 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

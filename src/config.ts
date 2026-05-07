@@ -166,6 +166,8 @@ export interface AppConfig {
     cameraPunch: boolean;
     /** Base displacement magnitude in pixels for a 50-point kill. Larger kills scale up to 2.5×. */
     cameraPunchMagnitude: number;
+    /** Large animated ×N pop-up in screen centre when the kill-chain multiplier increases (experimental). */
+    comboCounter: boolean;
   };
 
   grid: {
@@ -358,6 +360,7 @@ const _DEFAULTS: AppConfig = {
     surgeIndicator: false,
     cameraPunch: false,
     cameraPunchMagnitude: 20,
+    comboCounter: false,
   },
 
   grid: {
