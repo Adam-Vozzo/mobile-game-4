@@ -13,4 +13,6 @@ Format suggestion (loose):
 
 ---
 
+- Include the DESIGN.md and ROADMAP.md content in the README.md file.
+
 (no entries yet — first iteration just landed)
