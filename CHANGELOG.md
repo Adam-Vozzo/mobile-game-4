@@ -2,6 +2,74 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.10.0 — Iteration 10: Black Hole Enemy (2026-05-07)
+
+**Choice: FEATURE** — No feedback, no open PRs, no bugs. Black Hole is the most
+drama-per-pixel option from the next enemy batch and from the Ideas pool: a gravity
+well that bends bullets and pulls the player, rewarding aggressive play at 200 pts.
+
+### What landed
+
+- **`src/game/enemies/black-hole.ts`** — `BlackHoles` class, pool cap 8.
+  - Slow random drift (28 px/s) with soft edge bounce, heading wobbles every 1.5–3 s.
+  - **HP-based:** takes 5 bullet hits to destroy; bullets are consumed on each hit.
+  - `damage(i)` returns `true` when HP reaches 0.
+  - Two Graphics per instance: `outer` (slow CW rotation) + `inner` (faster CCW).
+  - Both hide on `releaseAt()` / `releaseAll()`.
+- **`src/render/ships.ts`** — `drawBlackHoleOuter()` + `drawBlackHoleInner()`.
+  - Faint influence-halo circles hint at the gravity field.
+  - Outer: 3 arc segments at r×2.5 + violet core orb + bright event-horizon ring.
+  - Inner: 3 arc segments at r×1.68 in pale pink-violet, counter-rotates.
+  - Additive blend throughout; pulsing scale (±8% at 2.8 Hz).
+- **`src/config.ts`** — `enemies.blackHole` block (radius 22, speed 28, hp 5,
+  maxConcurrent 3, influenceRadius 160, bulletGravityStrength 2500,
+  playerGravityStrength 1500, pointValue 200). `flow.blackHoleEnemy` toggle added.
+  buildVersion → `0.10.0`.
+- **`src/game/world.ts`** — full integration:
+  - `applyBlackHoleGravity(dt, ps)`: linear-falloff gravity (peak at BH center, zero
+    at influenceRadius). Bends all active bullets; pulls player velocity.
+  - Gravity applied after enemy movement, before `bullets.step()`, so newly fired
+    bullets are bent this frame.
+  - `killBlackHole()`: 3.5× particle burst (purple/pink/white), 2× grid push,
+    stronger screen shake (18×intensity), double hitstop, purple screen flash.
+  - Bullet-BH collision: bullet consumed, HP decrements; death triggers `killBlackHole`.
+  - Player-BH collision: `onPlayerHit` (no kill/destroy on player touch).
+  - Auto-aim targets black holes alongside other enemies.
+  - Non-director spawn: 6% chance per spawn tick, capped at `maxConcurrent` (3),
+    independent of `newEnemyTypes`.
+  - Director spawn path: black holes appear in `pickType()` at difficulty > 0.6,
+    up to 7% weight at t=1.0, gated by `flow.blackHoleEnemy`.
+  - `entityCount()`, `reset()`, total-cap accounting all updated.
+- **`src/game/spawn-director.ts`** — `EnemyType` extended to `'black-hole'`.
+- **`src/tweaks/registry.ts`** — `flow.blackHoleEnemy` toggle registered under Flow,
+  experimental, default off.
+
+### Tests
+
+- 9 new tests in `tests/black-hole.test.ts`: starts empty, spawn sets HP, damage
+  decrements, damage returns true at death, releaseAt hides both graphics, releaseAll
+  clears, step moves position, step bounces edges, step rotates outer CW and inner CCW.
+- Total: **66 tests passing**.
+
+### Toggles added
+
+- `flow.blackHoleEnemy` — experimental, default **off**.
+  Description: "Gravity-well enemy: curves bullets toward it and pulls the player.
+  Requires 5 hits to destroy. High point value (200)."
+
+### Risks
+
+- Bullet gravity iterates over all bullets × all black holes each tick. At 3 BHs
+  and 256 bullets this is 768 comparisons per tick — negligible at 120Hz.
+- Player gravity is velocity-additive; strong sustained pull near the center can
+  briefly push player beyond maxSpeed. Intentional — creates the "danger zone" feel.
+- Death explosion is intentionally dramatic (3.5× particles) — watch for particle
+  cap pressure if all 3 BHs die simultaneously during a high-density surge.
+
+### Bundle
+
+- index.js: 19.16 KB gz (was 17.99 KB; +1.17 KB for black hole module + draw funcs).
+
 ## 0.9.0 — Iteration 9: Surge Visual Indicator (2026-05-07)
 
 **Choice: FEATURE** — No feedback to act on. Surge Visual Indicator is the first item

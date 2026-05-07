@@ -96,6 +96,10 @@ export function buildRegistry(): readonly Tweak[] {
   reg.push(slider('flow', 'flow.startingLives', 'Starting lives', 1, 9, 1));
   reg.push(slider('flow', 'score.multiplier.decayPerSecond', 'Mult decay/sec', 0, 4, 0.1));
   reg.push(toggle('flow', 'flow.newEnemyTypes', 'New enemy types (Grunt + Weaver)', true));
+  const bhTweak = toggle('flow', 'flow.blackHoleEnemy', 'Black Hole enemy', true);
+  bhTweak.description =
+    'Gravity-well enemy: curves bullets toward it and pulls the player. Requires 5 hits to destroy. High point value (200).';
+  reg.push(bhTweak);
   const directorTweak = toggle('flow', 'spawnDirector.enabled', 'Spawn director', true);
   directorTweak.description =
     'Escalating pressure over 2 min — spawn rate ramps, enemy mix shifts, random surges spike intensity.';

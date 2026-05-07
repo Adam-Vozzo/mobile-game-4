@@ -4,6 +4,7 @@ import { Bullets } from './bullets';
 import { Wanderers } from './enemies/wanderer';
 import { Grunts } from './enemies/grunt';
 import { Weavers } from './enemies/weaver';
+import { BlackHoles } from './enemies/black-hole';
 import { ScoreState } from './score';
 import { SpawnDirector } from './spawn-director';
 import { ParticleSystem } from '../fx/particles';
@@ -29,6 +30,7 @@ const FLASH_KILL_DURATION = 0.15;
 
 const FLASH_GRUNT_COLOR = 0xff7700;
 const FLASH_WEAVER_COLOR = 0xaaff00;
+const FLASH_BH_COLOR = 0xaa00ff;
 
 const FLASH_HIT_COLOR = 0xffffff;
 const FLASH_HIT_ALPHA = 0.55;
@@ -48,6 +50,7 @@ export class World {
   readonly wanderers: Wanderers;
   readonly grunts: Grunts;
   readonly weavers: Weavers;
+  readonly blackHoles: BlackHoles;
   readonly particles: ParticleSystem;
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
@@ -82,6 +85,7 @@ export class World {
     this.wanderers = new Wanderers(renderer.layers.vector);
     this.grunts = new Grunts(renderer.layers.vector);
     this.weavers = new Weavers(renderer.layers.vector);
+    this.blackHoles = new BlackHoles(renderer.layers.vector);
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
     this.flash = new ScreenFlash(renderer.layers.overlay);
     this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
@@ -106,7 +110,14 @@ export class World {
   }
 
   entityCount(): number {
-    return 1 + this.bullets.count + this.wanderers.count + this.grunts.count + this.weavers.count;
+    return (
+      1 +
+      this.bullets.count +
+      this.wanderers.count +
+      this.grunts.count +
+      this.weavers.count +
+      this.blackHoles.count
+    );
   }
 
   get isOver(): boolean {
@@ -131,6 +142,7 @@ export class World {
     this.wanderers.releaseAll();
     this.grunts.releaseAll();
     this.weavers.releaseAll();
+    this.blackHoles.releaseAll();
     this.bullets.releaseAll();
     this.particles.clear();
     this.flash.clear();
@@ -224,6 +236,10 @@ export class World {
       const e = this.weavers.pool.items[i]!;
       checkAimTarget(e.x, e.y);
     }
+    for (let i = 0; i < this.blackHoles.count; i++) {
+      const e = this.blackHoles.pool.items[i]!;
+      checkAimTarget(e.x, e.y);
+    }
     if (input.hasAim) {
       this.player.setFacing(Math.atan2(input.aimY, input.aimX));
     } else if (hasTarget) {
@@ -252,11 +268,16 @@ export class World {
     this.wanderers.step(sdt, w, h);
     this.grunts.step(sdt, w, h, ps.x, ps.y);
     this.weavers.step(sdt, w, h, ps.x, ps.y);
+    this.blackHoles.step(sdt, w, h);
+    if (config.flow.blackHoleEnemy && this.blackHoles.count > 0) {
+      this.applyBlackHoleGravity(sdt, ps);
+    }
     this.bullets.step(sdt, w, h);
 
     this.collide();
 
-    const total = this.wanderers.count + this.grunts.count + this.weavers.count;
+    const total =
+      this.wanderers.count + this.grunts.count + this.weavers.count + this.blackHoles.count;
     if (config.spawnDirector.enabled) {
       const types = this.director.tick(sdt, total);
       for (const type of types) this.spawnEnemyOfType(type, w, h);
@@ -331,6 +352,15 @@ export class World {
 
   private spawnEnemy(w: number, h: number): void {
     const { x, y } = this.spawnAt(w, h);
+    // Black hole: rare independent spawn regardless of newEnemyTypes.
+    if (
+      config.flow.blackHoleEnemy &&
+      this.blackHoles.count < config.enemies.blackHole.maxConcurrent &&
+      defaultRng.next() < 0.06
+    ) {
+      this.blackHoles.spawn(x, y);
+      return;
+    }
     if (config.flow.newEnemyTypes) {
       const roll = defaultRng.next();
       if (roll < 0.5) {
@@ -349,7 +379,14 @@ export class World {
     const { x, y } = this.spawnAt(w, h);
     if (type === 'grunt') this.grunts.spawn(x, y);
     else if (type === 'weaver') this.weavers.spawn(x, y);
-    else this.wanderers.spawn(x, y);
+    else if (
+      type === 'black-hole' &&
+      this.blackHoles.count < config.enemies.blackHole.maxConcurrent
+    ) {
+      this.blackHoles.spawn(x, y);
+    } else if (type !== 'black-hole') {
+      this.wanderers.spawn(x, y);
+    }
   }
 
   private collide(): void {
@@ -359,6 +396,19 @@ export class World {
 
     outer_w: for (let bi = this.bullets.count - 1; bi >= 0; bi--) {
       const b = this.bullets.pool.items[bi]!;
+      for (let ei = this.blackHoles.count - 1; ei >= 0; ei--) {
+        const e = this.blackHoles.pool.items[ei]!;
+        const dx = e.x - b.x;
+        const dy = e.y - b.y;
+        const r = config.enemies.blackHole.radius + bulletR;
+        if (dx * dx + dy * dy <= r * r) {
+          if (this.blackHoles.damage(ei)) {
+            this.killBlackHole(ei, e.x, e.y);
+          }
+          this.bullets.releaseAt(bi);
+          continue outer_w;
+        }
+      }
       for (let ei = this.wanderers.count - 1; ei >= 0; ei--) {
         const e = this.wanderers.pool.items[ei]!;
         const dx = e.x - b.x; const dy = e.y - b.y;
@@ -393,6 +443,16 @@ export class World {
 
     // Skip player collision during invincibility window.
     if (ps.alive && this.invincTimer <= 0) {
+      for (let ei = this.blackHoles.count - 1; ei >= 0; ei--) {
+        const e = this.blackHoles.pool.items[ei]!;
+        const dx = e.x - ps.x;
+        const dy = e.y - ps.y;
+        const r = playerR + config.enemies.blackHole.radius;
+        if (dx * dx + dy * dy <= r * r) {
+          this.onPlayerHit(e.x, e.y);
+          return;
+        }
+      }
       for (let ei = this.wanderers.count - 1; ei >= 0; ei--) {
         const e = this.wanderers.pool.items[ei]!;
         const dx = e.x - ps.x; const dy = e.y - ps.y;
@@ -421,6 +481,74 @@ export class World {
           this.onPlayerHit(e.x, e.y);
           this.killWeaver(ei, e.x, e.y);
           return;
+        }
+      }
+    }
+  }
+
+  private killBlackHole(i: number, x: number, y: number): void {
+    const cfg = config.enemies.blackHole;
+    this.blackHoles.releaseAt(i);
+    this.score.onKill(cfg.pointValue);
+    // Massive explosion — more dramatic than any other enemy kill.
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 2.5), 0xaa00ff, 1.2, 1.4);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.0), 0xff88ff, 1.6, 0.8);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.5), 0xffffff, 2.0, 0.5);
+    this.grid.push(x, y, config.grid.explosionInfluence * 2.0, config.grid.influenceRadius * 1.6);
+    this.shakeAmp = Math.max(this.shakeAmp, 18 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_BH_COLOR, 0.55, 0.4);
+    }
+    if (config.juice.hitstopMs > 0) {
+      const frames = Math.max(1, Math.round(config.juice.hitstopMs / (TIMING.SIM_DT * 1000)));
+      this.hitstopFrames = Math.max(this.hitstopFrames, frames * 2);
+    }
+    if (config.juice.slowMoOnBigKill && this.score.multiplier >= SLOW_MO_MULT_THRESHOLD) {
+      this.timeScale = SLOW_MO_SCALE;
+      this.slowMoTimer = SLOW_MO_DURATION;
+    }
+    events.emit('kill', { x, y, r: 0.67, g: 0, b: 1, pointValue: cfg.pointValue });
+  }
+
+  private applyBlackHoleGravity(
+    dt: number,
+    ps: { x: number; y: number; vx: number; vy: number; alive: boolean },
+  ): void {
+    const bhCfg = config.enemies.blackHole;
+    const influenceR = bhCfg.influenceRadius;
+    const influenceR2 = influenceR * influenceR;
+    const bulletG = bhCfg.bulletGravityStrength;
+    const playerG = bhCfg.playerGravityStrength;
+
+    for (let bi = 0; bi < this.blackHoles.count; bi++) {
+      const bh = this.blackHoles.pool.items[bi]!;
+
+      // Gravity on bullets — linear falloff from center to influenceRadius.
+      for (let i = 0; i < this.bullets.count; i++) {
+        const b = this.bullets.pool.items[i]!;
+        const dx = bh.x - b.x;
+        const dy = bh.y - b.y;
+        const dist2 = dx * dx + dy * dy;
+        if (dist2 < influenceR2 && dist2 > 4) {
+          const dist = Math.sqrt(dist2);
+          const factor = Math.max(0, 1 - dist / influenceR);
+          const accel = bulletG * factor * dt;
+          b.vx += (dx / dist) * accel;
+          b.vy += (dy / dist) * accel;
+        }
+      }
+
+      // Gravity on player.
+      if (ps.alive) {
+        const dpx = bh.x - ps.x;
+        const dpy = bh.y - ps.y;
+        const pdist2 = dpx * dpx + dpy * dpy;
+        if (pdist2 < influenceR2 && pdist2 > 4) {
+          const pdist = Math.sqrt(pdist2);
+          const pfactor = Math.max(0, 1 - pdist / influenceR);
+          const paccel = playerG * pfactor * dt;
+          ps.vx += (dpx / pdist) * paccel;
+          ps.vy += (dpy / pdist) * paccel;
         }
       }
     }

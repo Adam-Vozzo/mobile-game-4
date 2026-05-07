@@ -111,3 +111,36 @@ function bulletPath(g: Graphics, len: number, half: number): void {
   g.moveTo(-len * 0.5, half);
   g.lineTo(len * 0.5, half);
 }
+
+export function drawBlackHoleOuter(g: Graphics): void {
+  g.clear();
+  const r = 22;
+  // Faint gravity-well halos hint at the influence radius.
+  g.lineStyle({ width: 16, color: 0x5500bb, alpha: 0.05 });
+  g.drawCircle(0, 0, r * 6.5);
+  g.lineStyle({ width: 10, color: 0x6622cc, alpha: 0.09 });
+  g.drawCircle(0, 0, r * 4);
+  // Outer orbit arcs — 3 segments, rotate CW.
+  g.lineStyle({ width: 3, color: 0x8833ff, alpha: 0.62 });
+  g.arc(0, 0, r * 2.5, 0, Math.PI * 0.45);
+  g.arc(0, 0, r * 2.5, Math.PI * 0.75, Math.PI * 1.2);
+  g.arc(0, 0, r * 2.5, Math.PI * 1.5, Math.PI * 1.92);
+  // Core orb — filled, additive violet glow.
+  g.lineStyle({ width: 8, color: 0xaa44ff, alpha: 0.25 });
+  g.beginFill(0x4400aa, 0.65);
+  g.drawCircle(0, 0, r);
+  g.endFill();
+  // Bright event-horizon ring.
+  g.lineStyle({ width: 2, color: 0xee88ff, alpha: 1 });
+  g.drawCircle(0, 0, r);
+}
+
+export function drawBlackHoleInner(g: Graphics): void {
+  g.clear();
+  const r = 22;
+  // Inner orbit arcs — 3 segments, counter-rotate CCW at a faster rate.
+  g.lineStyle({ width: 2, color: 0xff99ff, alpha: 0.72 });
+  g.arc(0, 0, r * 1.68, 0, Math.PI * 0.5);
+  g.arc(0, 0, r * 1.68, Math.PI * 0.85, Math.PI * 1.35);
+  g.arc(0, 0, r * 1.68, Math.PI * 1.7, Math.PI * 2.0);
+}

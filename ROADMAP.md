@@ -33,13 +33,16 @@ change.
 - **Iteration 9: Surge Visual Indicator.** ✅ Landed in v0.9.0.
   `SurgeGlow` FX class — orange screen-edge pulsing glow during surge bursts.
   `surgeChange` event added to event bus. `juice.surgeIndicator` experimental toggle.
+- **Iteration 10: Black Hole enemy.** ✅ Landed in v0.10.0.
+  Gravity-well enemy (5 HP) — bends bullets and pulls the player. Massive death
+  explosion. `flow.blackHoleEnemy` experimental toggle.
 
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- 2–4 more enemy types: Snake (chains of segments), Black Hole (gravity well),
-  Pinwheel (orbiting drones), Splitter (splits on death).
+- 2–3 more enemy types: Snake (chains of segments), Pinwheel (orbiting drones),
+  Splitter (splits on death).
 - Main menu shell.
 
 ## Later
