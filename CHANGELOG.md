@@ -2,6 +2,52 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.13.0 — Iteration 13: Pinwheel Enemy (2026-05-07)
+
+**Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP.Next lists
+Pinwheel as the last remaining named enemy type. Mechanically distinctive as
+the first enemy with an active shield layer: three drone satellites orbit the
+core and absorb bullets, forcing players to time shots through the rotating
+gaps rather than just peppering the enemy directly.
+
+**What:**
+- `Pinwheels` class in `src/game/enemies/pinwheel.ts`. Pool cap 4 (2 max
+  concurrent with swap headroom). Each pinwheel has:
+  - **Hub**: violet 6-pointed star, 3 HP. Drifts toward the player at 38 px/s
+    with a gentle steering lag. Visually counter-rotates (opposite direction to
+    the drone constellation) for kinetic contrast.
+  - **Three drones**: pale violet circles (r=8) that orbit the hub at radius 46
+    with angular speed 1.7 rad/s (~1 full rotation every 3.7 s). Unkillable —
+    bullets are absorbed silently. Players must thread shots through the ~60°
+    rotating gaps.
+  - **Wall margin**: hub bounces off walls keeping the full orbit extent inside
+    world bounds (margin = hubRadius + orbitRadius + droneRadius).
+- **Kill FX**: triple purple burst (core + outer ring + white spark), grid push
+  1.3×, screen shake 10×, screen flash, hitstop, slow-mo at high multiplier.
+  175 pts.
+- **First-hit feedback**: small violet particle burst + mild shake + flash.
+- `flow.pinwheelEnemy` experimental toggle (default off) wired into Tweaks
+  Menu under Flow with description.
+- **Spawn Director**: pinwheel weight rises 0→0.10 between difficulty 0.5→1.0
+  (late-game only), gated by toggle.
+- **Flat spawner**: 15% chance when `pinwheelEnemy` is on and fewer than 2
+  concurrent pinwheels exist; also folded into the `newEnemyTypes` branch at
+  8% weight displacing other types proportionally.
+- Auto-aim targets the hub.
+- 12 new unit tests (count, spawn/release, hp flow, damage, orbit positions,
+  step movement, wall clamping); total now **106 passing**.
+- Bundle: 22.58 KB gzip (no meaningful change, well under 500 KB target).
+
+**Risks:**
+- Rotating drone collision uses live-computed orbit angle every frame (not the
+  stored Graphics positions), so collision is authoritative regardless of frame
+  rate. Minor duplicated trig with `_placeDrones` — acceptable for clarity.
+- At high difficulty with 2 concurrent pinwheels, the arena has 6 rotating
+  hazard zones. The slow hub speed (38 px/s) and 2-concurrent cap should keep
+  it readable; playtest will tell.
+
+**Toggles added:** `flow.pinwheelEnemy` (experimental, default off)
+
 ## 0.12.0 — Iteration 12: Snake Enemy (2026-05-07)
 
 **Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP.Next lists

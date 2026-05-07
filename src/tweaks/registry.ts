@@ -108,6 +108,10 @@ export function buildRegistry(): readonly Tweak[] {
   snakeTweak.description =
     'Teal segmented enemy (2 HP): body segments absorb bullets — only the head is vulnerable. Forces you to outmanoeuvre the trail to get a clear shot.';
   reg.push(snakeTweak);
+  const pinwheelTweak = toggle('flow', 'flow.pinwheelEnemy', 'Pinwheel enemy', true);
+  pinwheelTweak.description =
+    'Violet rotating hub (3 HP) guarded by three orbiting drones that absorb bullets. Thread shots through the rotating gaps — or wait for a gap to rotate to you.';
+  reg.push(pinwheelTweak);
   const directorTweak = toggle('flow', 'spawnDirector.enabled', 'Spawn director', true);
   directorTweak.description =
     'Escalating pressure over 2 min — spawn rate ramps, enemy mix shifts, random surges spike intensity.';

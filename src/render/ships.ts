@@ -213,3 +213,35 @@ export function drawSnakeSegment(g: Graphics, segIndex: number, totalSegs: numbe
   g.lineStyle({ width: 1, color: 0xffffff, alpha: 0.9 - t * 0.4 });
   g.drawCircle(0, 0, r);
 }
+
+export function drawPinwheelHub(g: Graphics, color = 0xcc44ff): void {
+  g.clear();
+  g.lineStyle({ width: 8, color, alpha: 0.14 });
+  star6(g, 14, 7);
+  g.lineStyle({ width: 3, color, alpha: 0.52 });
+  star6(g, 14, 7);
+  g.lineStyle({ width: 1.25, color: 0xffffff, alpha: 1 });
+  star6(g, 14, 7);
+}
+
+export function drawPinwheelDrone(g: Graphics, color = 0xee88ff): void {
+  g.clear();
+  const r = 8;
+  g.lineStyle({ width: 6, color, alpha: 0.16 });
+  g.drawCircle(0, 0, r);
+  g.lineStyle({ width: 2.5, color, alpha: 0.5 });
+  g.drawCircle(0, 0, r);
+  g.lineStyle({ width: 1, color: 0xffffff, alpha: 1 });
+  g.drawCircle(0, 0, r);
+}
+
+function star6(g: Graphics, outerR: number, innerR: number): void {
+  for (let i = 0; i <= 12; i++) {
+    const angle = (i * Math.PI) / 6 - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    if (i === 0) g.moveTo(x, y);
+    else g.lineTo(x, y);
+  }
+}
