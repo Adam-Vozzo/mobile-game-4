@@ -37,12 +37,15 @@ change.
   Gravity-well enemy (5 HP) — bends bullets and pulls the player. Massive death
   explosion. `flow.blackHoleEnemy` experimental toggle.
 
+- **Iteration 11: Splitter Enemy.** ✅ Landed in v0.11.0.
+  Yellow square (2 HP) that splits into 2 fast orange Shards on death. Shards
+  home aggressively. `flow.splitterEnemy` experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- 2–3 more enemy types: Snake (chains of segments), Pinwheel (orbiting drones),
-  Splitter (splits on death).
+- Remaining new enemy types: Snake (chains of segments), Pinwheel (orbiting drones).
 - Main menu shell.
 
 ## Later

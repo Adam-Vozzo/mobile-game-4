@@ -144,3 +144,41 @@ export function drawBlackHoleInner(g: Graphics): void {
   g.arc(0, 0, r * 1.68, Math.PI * 0.85, Math.PI * 1.35);
   g.arc(0, 0, r * 1.68, Math.PI * 1.7, Math.PI * 2.0);
 }
+
+export function drawSplitter(g: Graphics, color = 0xffdd00): void {
+  g.clear();
+  const r = 14;
+  g.lineStyle({ width: 8, color, alpha: 0.18 });
+  square(g, r);
+  g.lineStyle({ width: 4, color, alpha: 0.48 });
+  square(g, r);
+  g.lineStyle({ width: 1.5, color: 0xffffff, alpha: 1 });
+  square(g, r);
+}
+
+function square(g: Graphics, r: number): void {
+  g.moveTo(-r, -r);
+  g.lineTo(r, -r);
+  g.lineTo(r, r);
+  g.lineTo(-r, r);
+  g.lineTo(-r, -r);
+}
+
+export function drawShard(g: Graphics, color = 0xff8800): void {
+  g.clear();
+  const r = 8;
+  g.lineStyle({ width: 5, color, alpha: 0.2 });
+  dart(g, r);
+  g.lineStyle({ width: 2.5, color, alpha: 0.55 });
+  dart(g, r);
+  g.lineStyle({ width: 1, color: 0xffffff, alpha: 1 });
+  dart(g, r);
+}
+
+function dart(g: Graphics, r: number): void {
+  g.moveTo(r * 1.3, 0);
+  g.lineTo(-r, -r * 0.6);
+  g.lineTo(-r * 0.3, 0);
+  g.lineTo(-r, r * 0.6);
+  g.lineTo(r * 1.3, 0);
+}

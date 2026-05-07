@@ -83,6 +83,17 @@ export interface AppConfig {
       playerGravityStrength: number;
       pointValue: number;
     };
+    splitter: {
+      radius: number;
+      speed: number;
+      hp: number;
+      pointValue: number;
+    };
+    shard: {
+      radius: number;
+      speed: number;
+      pointValue: number;
+    };
     spawn: {
       /** seconds between spawns at start; will be modulated by spawn director later */
       intervalSeconds: number;
@@ -157,6 +168,8 @@ export interface AppConfig {
     newEnemyTypes: boolean;
     /** Enable Black Hole enemy — gravity well that curves bullets and pulls the player (experimental). */
     blackHoleEnemy: boolean;
+    /** Enable Splitter enemy — splits into two fast Shards on death (experimental). */
+    splitterEnemy: boolean;
   };
 
   spawnDirector: {
@@ -248,6 +261,17 @@ const _DEFAULTS: AppConfig = {
       playerGravityStrength: 1500,
       pointValue: 200,
     },
+    splitter: {
+      radius: 15,
+      speed: 65,
+      hp: 2,
+      pointValue: 100,
+    },
+    shard: {
+      radius: 8,
+      speed: 260,
+      pointValue: 35,
+    },
     spawn: {
       intervalSeconds: 0.8,
       maxAlive: 24,
@@ -303,6 +327,7 @@ const _DEFAULTS: AppConfig = {
     startingLives: 3,
     newEnemyTypes: false,
     blackHoleEnemy: false,
+    splitterEnemy: false,
   },
 
   spawnDirector: {
