@@ -2,6 +2,47 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.18.0 — Iteration 18: Floating Score Delta Popups (2026-05-07)
+
+**Choice: POLISH** — No new feedback, no bugs (pre-existing combo-counter test failures also fixed
+here — see below). ROADMAP.Next explicitly lists floating score-delta popups as the top Polish item.
+
+**What:**
+- `ScorePopup` class in `src/ui/score-popup.ts`.
+  - Subscribes to the `kill` event bus.
+  - On each kill: creates a `<div class="score-popup">` at the world-space kill position
+    (`position: fixed; left: worldX; top: worldY`).
+  - Text: `+N` where N = `pointValue × multiplier` (actual points scored, not base value).
+  - Color: `rgb()` tinted to match the killed enemy's colour; matching `text-shadow` glow.
+  - CSS `@keyframes score-drift`: fades up 64 px, opacity 1→0 over 800 ms (`ease-out`).
+  - Element auto-removed via `setTimeout` at 850 ms (20 ms grace after animation end).
+  - `destroy()` unsubscribes the kill listener to prevent leaks.
+- Config: `juice.scorePopups` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge.
+- `KillEvent` extended with `multiplier: number` field; all 8 kill-emit sites in `world.ts`
+  now pass `this.score.multiplier` (already updated by `score.onKill()` before the emit).
+- 10 new tests in `tests/score-popup.test.ts`.
+- **Bonus fix:** 4 pre-existing `combo-counter` test failures resolved — root cause was
+  `vi.resetModules()` causing `ComboCounter` to import a fresh `config` instance while the
+  test mutated the stale one. Fixed by converting to a static import and removing
+  `vi.resetModules()`.
+- `tests/audio.test.ts` and `tests/camera-punch.test.ts` updated with `multiplier: 1` to
+  satisfy the new required `KillEvent.multiplier` field.
+- Total: **136 tests, all passing** (was 132 passing / 4 failing).
+- Bundle: 24.22 KB gzip (was 23.62 KB; +0.6 KB — pure DOM/CSS, no new GL code).
+
+**Risks:**
+- Score popups use `position: fixed` with world coords as CSS pixels. The `#app` element is
+  `position: fixed; inset: 0`, so world-space coordinates equal viewport-CSS coordinates —
+  no scale factor needed. Camera shake/punch applies a small stage offset (≤ 30 px) that is
+  NOT reflected in the popup position; at 800 ms lifetime and drifting animation this is
+  imperceptible.
+- At very high enemy densities, many popups may stack visually. They don't share DOM space
+  with score or lives HUD (which are canvas-rendered), so no occlusion risk there. If
+  playtesting finds the density overwhelming, throttling or pooling can be added.
+
+**Toggles added:** `juice.scorePopups` (experimental, default off).
+
 ## 0.17.0 — Iteration 17: Combo Counter Visual (2026-05-07)
 
 **Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next explicitly

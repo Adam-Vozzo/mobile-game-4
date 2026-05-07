@@ -721,3 +721,22 @@ canvas {
 #combo-counter.combo-pop {
   animation: combo-pop 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+/* Score delta popups — world-space floating labels */
+.score-popup {
+  position: fixed;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  z-index: 75;
+  animation: score-drift 0.8s ease-out forwards;
+}
+
+@keyframes score-drift {
+  0%   { opacity: 1;   transform: translate(-50%, -50%); }
+  60%  { opacity: 0.9; transform: translate(-50%, calc(-50% - 38px)); }
+  100% { opacity: 0;   transform: translate(-50%, calc(-50% - 64px)); }
+}

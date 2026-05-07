@@ -12,6 +12,8 @@ export interface KillEvent {
   g: number;
   b: number;
   pointValue: number;
+  /** kill-chain multiplier active at the moment of the kill */
+  multiplier: number;
 }
 
 export interface PlayerHitEvent {
