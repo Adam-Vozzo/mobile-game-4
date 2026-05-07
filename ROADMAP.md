@@ -56,13 +56,19 @@ change.
   "MAIN MENU" escape on game-over. Loop starts paused; reactive grid
   shows through the semi-transparent overlay.
 
+- **Iteration 15: Camera Punch.** ✅ Landed in v0.15.0.
+  Directional camera displacement toward each kill, beat-synced to drum hits.
+  Underdamped spring return with subtle overshoot. `juice.cameraPunch`
+  experimental toggle + `juice.cameraPunchMagnitude` slider.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - PROMOTE/DEMOTE pass: promote well-liked experimental enemy toggles to
   default-on once playtest data arrives.
-- Polish: per-kill camera punch synced to drum hits.
+- Polish: kill-chain combo counter visual (on-screen streak number that
+  pops in sync with multiplier gains).
 
 ## Later
 

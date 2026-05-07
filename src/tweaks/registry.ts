@@ -83,6 +83,11 @@ export function buildRegistry(): readonly Tweak[] {
   surgeIndicatorTweak.description =
     'Animated orange screen-edge glow during Spawn Director surge bursts. Requires Spawn Director on.';
   reg.push(surgeIndicatorTweak);
+  const cameraPunchTweak = toggle('visual', 'juice.cameraPunch', 'Camera punch on kill', true);
+  cameraPunchTweak.description =
+    'Directional camera displacement toward each kill, beat-synced to the nearest drum hit. Fires immediately when music is off.';
+  reg.push(cameraPunchTweak);
+  reg.push(slider('visual', 'juice.cameraPunchMagnitude', 'Camera punch magnitude', 5, 50, 1, 'px'));
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));
