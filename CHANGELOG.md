@@ -2,6 +2,47 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.12.0 — Iteration 12: Snake Enemy (2026-05-07)
+
+**Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP.Next lists
+Snake as the next enemy. It's the most mechanically distinctive of the remaining
+candidates: the body segments block bullets, forcing the player to outmanoeuvre
+the trail before getting a clear shot at the head.
+
+**What:**
+- `Snakes` class in `src/game/enemies/snake.ts`. Pool cap 3; each snake has:
+  - **Head**: teal arrowhead (`drawSnakeHead`), 2 HP, loosely steers toward the
+    player (55% probability per wobble tick, otherwise random drift). Bounces
+    off walls with heading correction.
+  - **Body segments**: 5 circles tapering from r=10 to r=5 (`drawSnakeSegment`),
+    drawn along a position ring-buffer that the head writes every 4 px of travel.
+    Bullet-absorbing (blocks shots silently) but player-lethal on contact.
+- **Position history**: Float32Array ring buffer (512 entries). Head pushes a
+  sample every 4 px of travel (frame-rate independent); segments read at fixed
+  lookback offsets (28 px gap ÷ 4 = 7 steps per segment).
+- **Kill FX**: teal + white particle burst, grid push, screen shake, screen
+  flash, hitstop, slow-mo at high multiplier. 150 pts.
+- **First-hit feedback**: small teal flash + mild shake (hp 2→1).
+- `flow.snakeEnemy` experimental toggle (default off) wired into the Tweaks
+  Menu under Flow with description.
+- Spawn Director: snake weight rises 0→0.12 between difficulty 0.4→0.9 (gated
+  by toggle), displacing wanderer weight proportionally.
+- Flat spawner: up to 18% chance when `snakeEnemy` is on and fewer than 3
+  concurrent snakes exist.
+- Auto-aim targets the snake head (not segments).
+- 15 new unit tests (all body segment count, pool cap, hp flow, movement, wall
+  bounce, history ring-buffer, releaseAt/All); total now 94 passing.
+- Bundle: 21.51 KB gzip (no meaningful change).
+
+**Risks:**
+- With 3 snakes × 5 segments = 15 body obstacles plus the heads, the arena can
+  feel cluttered at high difficulty. The 3-concurrent cap and slow 90 px/s
+  speed should keep it manageable; playtest will tell.
+- Float32Array `fill()` on spawn (512 entries × 3 snakes max) is negligible
+  but revisit if profiling reveals it on ultra-low-end devices.
+
+**Toggles added:** `flow.snakeEnemy` (experimental, default off)
+
 ## 0.11.0 — Iteration 11: Splitter Enemy (2026-05-07)
 
 **Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP points to

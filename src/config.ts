@@ -94,6 +94,17 @@ export interface AppConfig {
       speed: number;
       pointValue: number;
     };
+    snake: {
+      radius: number;
+      segmentRadius: number;
+      segmentCount: number;
+      /** Gap in pixels between each body segment along the travel trail. */
+      segmentGap: number;
+      speed: number;
+      hp: number;
+      maxConcurrent: number;
+      pointValue: number;
+    };
     spawn: {
       /** seconds between spawns at start; will be modulated by spawn director later */
       intervalSeconds: number;
@@ -170,6 +181,8 @@ export interface AppConfig {
     blackHoleEnemy: boolean;
     /** Enable Splitter enemy — splits into two fast Shards on death (experimental). */
     splitterEnemy: boolean;
+    /** Enable Snake enemy — segmented body blocks bullets; only the head can be killed (experimental). */
+    snakeEnemy: boolean;
   };
 
   spawnDirector: {
@@ -204,7 +217,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.10.0',
+  buildVersion: '0.12.0',
 
   world: {
     width: 1600,
@@ -272,6 +285,16 @@ const _DEFAULTS: AppConfig = {
       speed: 260,
       pointValue: 35,
     },
+    snake: {
+      radius: 13,
+      segmentRadius: 10,
+      segmentCount: 5,
+      segmentGap: 28,
+      speed: 90,
+      hp: 2,
+      maxConcurrent: 3,
+      pointValue: 150,
+    },
     spawn: {
       intervalSeconds: 0.8,
       maxAlive: 24,
@@ -328,6 +351,7 @@ const _DEFAULTS: AppConfig = {
     newEnemyTypes: false,
     blackHoleEnemy: false,
     splitterEnemy: false,
+    snakeEnemy: false,
   },
 
   spawnDirector: {

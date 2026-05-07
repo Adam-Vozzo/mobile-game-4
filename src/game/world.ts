@@ -6,6 +6,7 @@ import { Grunts } from './enemies/grunt';
 import { Weavers } from './enemies/weaver';
 import { BlackHoles } from './enemies/black-hole';
 import { Splitters, Shards } from './enemies/splitter';
+import { Snakes } from './enemies/snake';
 import { ScoreState } from './score';
 import { SpawnDirector } from './spawn-director';
 import { ParticleSystem } from '../fx/particles';
@@ -34,6 +35,7 @@ const FLASH_WEAVER_COLOR = 0xaaff00;
 const FLASH_BH_COLOR = 0xaa00ff;
 const FLASH_SPLITTER_COLOR = 0xffdd00;
 const FLASH_SHARD_COLOR = 0xff8800;
+const FLASH_SNAKE_COLOR = 0x00ffaa;
 
 const FLASH_HIT_COLOR = 0xffffff;
 const FLASH_HIT_ALPHA = 0.55;
@@ -56,6 +58,7 @@ export class World {
   readonly blackHoles: BlackHoles;
   readonly splitters: Splitters;
   readonly shards: Shards;
+  readonly snakes: Snakes;
   readonly particles: ParticleSystem;
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
@@ -93,6 +96,7 @@ export class World {
     this.blackHoles = new BlackHoles(renderer.layers.vector);
     this.splitters = new Splitters(renderer.layers.vector);
     this.shards = new Shards(renderer.layers.vector);
+    this.snakes = new Snakes(renderer.layers.vector);
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
     this.flash = new ScreenFlash(renderer.layers.overlay);
     this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
@@ -125,7 +129,8 @@ export class World {
       this.weavers.count +
       this.blackHoles.count +
       this.splitters.count +
-      this.shards.count
+      this.shards.count +
+      this.snakes.count
     );
   }
 
@@ -154,6 +159,7 @@ export class World {
     this.blackHoles.releaseAll();
     this.splitters.releaseAll();
     this.shards.releaseAll();
+    this.snakes.releaseAll();
     this.bullets.releaseAll();
     this.particles.clear();
     this.flash.clear();
@@ -259,6 +265,10 @@ export class World {
       const e = this.shards.pool.items[i]!;
       checkAimTarget(e.x, e.y);
     }
+    for (let i = 0; i < this.snakes.count; i++) {
+      const e = this.snakes.pool.items[i]!;
+      checkAimTarget(e.x, e.y); // target the head
+    }
     if (input.hasAim) {
       this.player.setFacing(Math.atan2(input.aimY, input.aimX));
     } else if (hasTarget) {
@@ -295,13 +305,16 @@ export class World {
       this.splitters.step(sdt, w, h);
       this.shards.step(sdt, w, h, ps.x, ps.y);
     }
+    if (config.flow.snakeEnemy) {
+      this.snakes.step(sdt, w, h, ps.x, ps.y);
+    }
     this.bullets.step(sdt, w, h);
 
     this.collide();
 
     const total =
       this.wanderers.count + this.grunts.count + this.weavers.count + this.blackHoles.count +
-      this.splitters.count + this.shards.count;
+      this.splitters.count + this.shards.count + this.snakes.count;
     if (config.spawnDirector.enabled) {
       const types = this.director.tick(sdt, total);
       for (const type of types) this.spawnEnemyOfType(type, w, h);
@@ -387,15 +400,26 @@ export class World {
     }
     if (config.flow.newEnemyTypes) {
       const splitterW = config.flow.splitterEnemy ? 0.12 : 0;
+      const snakeW = config.flow.snakeEnemy && this.snakes.count < config.enemies.snake.maxConcurrent ? 0.1 : 0;
       const roll = defaultRng.next();
-      if (roll < 0.45 - splitterW * 0.5) {
+      if (roll < 0.45 - splitterW * 0.5 - snakeW * 0.5) {
         this.wanderers.spawn(x, y);
-      } else if (roll < 0.72 - splitterW * 0.3) {
+      } else if (roll < 0.72 - splitterW * 0.3 - snakeW * 0.3) {
         this.grunts.spawn(x, y);
-      } else if (roll < 1.0 - splitterW) {
+      } else if (roll < 1.0 - splitterW - snakeW) {
         this.weavers.spawn(x, y);
+      } else if (roll < 1.0 - splitterW) {
+        this.snakes.spawn(x, y);
       } else {
         this.splitters.spawn(x, y);
+      }
+    } else if (config.flow.snakeEnemy && this.snakes.count < config.enemies.snake.maxConcurrent) {
+      if (defaultRng.next() < 0.18) {
+        this.snakes.spawn(x, y);
+      } else if (config.flow.splitterEnemy && defaultRng.next() < 0.2) {
+        this.splitters.spawn(x, y);
+      } else {
+        this.wanderers.spawn(x, y);
       }
     } else if (config.flow.splitterEnemy) {
       if (defaultRng.next() < 0.2) {
@@ -413,12 +437,14 @@ export class World {
     if (type === 'grunt') this.grunts.spawn(x, y);
     else if (type === 'weaver') this.weavers.spawn(x, y);
     else if (type === 'splitter') this.splitters.spawn(x, y);
-    else if (
+    else if (type === 'snake' && this.snakes.count < config.enemies.snake.maxConcurrent) {
+      this.snakes.spawn(x, y);
+    } else if (
       type === 'black-hole' &&
       this.blackHoles.count < config.enemies.blackHole.maxConcurrent
     ) {
       this.blackHoles.spawn(x, y);
-    } else if (type !== 'black-hole') {
+    } else if (type !== 'black-hole' && type !== 'snake') {
       this.wanderers.spawn(x, y);
     }
   }
@@ -497,6 +523,38 @@ export class World {
           continue outer_w;
         }
       }
+      // Snake: head is killable; body segments absorb bullets without taking damage.
+      for (let ei = this.snakes.count - 1; ei >= 0; ei--) {
+        const e = this.snakes.pool.items[ei]!;
+        // Check head first.
+        const hdx = e.x - b.x; const hdy = e.y - b.y;
+        const headR = config.enemies.snake.radius + bulletR;
+        if (hdx * hdx + hdy * hdy <= headR * headR) {
+          if (this.snakes.damage(ei)) {
+            this.killSnake(ei, e.x, e.y);
+          } else {
+            this.onSnakeDamaged(e.x, e.y);
+          }
+          this.bullets.releaseAt(bi);
+          continue outer_w;
+        }
+        // Check body segments — they absorb bullets silently.
+        const segR = config.enemies.snake.segmentRadius + bulletR;
+        const segR2 = segR * segR;
+        let segHit = false;
+        for (let s = 0; s < config.enemies.snake.segmentCount; s++) {
+          const sg = e.segGs[s]!;
+          const sdx = sg.x - b.x; const sdy = sg.y - b.y;
+          if (sdx * sdx + sdy * sdy <= segR2) {
+            segHit = true;
+            break;
+          }
+        }
+        if (segHit) {
+          this.bullets.releaseAt(bi);
+          continue outer_w;
+        }
+      }
     }
 
     // Skip player collision during invincibility window.
@@ -558,6 +616,26 @@ export class World {
           this.onPlayerHit(e.x, e.y);
           this.killShard(ei, e.x, e.y);
           return;
+        }
+      }
+      // Snake: touching head or any body segment damages the player.
+      for (let ei = this.snakes.count - 1; ei >= 0; ei--) {
+        const e = this.snakes.pool.items[ei]!;
+        const hdx = e.x - ps.x; const hdy = e.y - ps.y;
+        const headR = playerR + config.enemies.snake.radius;
+        if (hdx * hdx + hdy * hdy <= headR * headR) {
+          this.onPlayerHit(e.x, e.y);
+          return;
+        }
+        const segR = playerR + config.enemies.snake.segmentRadius;
+        const segR2 = segR * segR;
+        for (let s = 0; s < config.enemies.snake.segmentCount; s++) {
+          const sg = e.segGs[s]!;
+          const sdx = sg.x - ps.x; const sdy = sg.y - ps.y;
+          if (sdx * sdx + sdy * sdy <= segR2) {
+            this.onPlayerHit(sg.x, sg.y);
+            return;
+          }
         }
       }
     }
@@ -662,6 +740,36 @@ export class World {
     this.shards.spawn(x, y, baseAngle - spread);
     this.shards.spawn(x, y, baseAngle + spread);
     events.emit('kill', { x, y, r: 1, g: 0.87, b: 0, pointValue: cfg.pointValue });
+  }
+
+  private onSnakeDamaged(x: number, y: number): void {
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.3), 0x00ffaa, 0.7, 0.5);
+    this.shakeAmp = Math.max(this.shakeAmp, 3 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_SNAKE_COLOR, 0.14, 0.07);
+    }
+  }
+
+  private killSnake(i: number, x: number, y: number): void {
+    const cfg = config.enemies.snake;
+    this.snakes.releaseAt(i);
+    this.score.onKill(cfg.pointValue);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.4), 0x00ffaa, 1.1, 1.0);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.5), 0xffffff, 1.6, 0.6);
+    this.grid.push(x, y, config.grid.explosionInfluence * 1.2, config.grid.influenceRadius);
+    this.shakeAmp = Math.max(this.shakeAmp, 8 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_SNAKE_COLOR, 0.4, 0.2);
+    }
+    if (config.juice.hitstopMs > 0) {
+      const frames = Math.max(1, Math.round(config.juice.hitstopMs / (TIMING.SIM_DT * 1000)));
+      this.hitstopFrames = Math.max(this.hitstopFrames, frames);
+    }
+    if (config.juice.slowMoOnBigKill && this.score.multiplier >= SLOW_MO_MULT_THRESHOLD) {
+      this.timeScale = SLOW_MO_SCALE;
+      this.slowMoTimer = SLOW_MO_DURATION;
+    }
+    events.emit('kill', { x, y, r: 0, g: 1, b: 0.67, pointValue: cfg.pointValue });
   }
 
   private killShard(i: number, x: number, y: number): void {
