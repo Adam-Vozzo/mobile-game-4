@@ -2,6 +2,47 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.19.0 — Iteration 19: Kill Shockwave Ring (2026-05-07)
+
+**Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next explicitly
+lists "hitstop screen-distortion (brief radial warp at kill point, synced to the hitstop
+freeze frame)" as the top Polish item.
+
+**What:**
+- `HitstopDistortion` class in `src/fx/hitstop-distortion.ts`.
+  - Subscribes to the `kill` event bus.
+  - On kill: records `{x, y, color}` derived from `KillEvent.{x,y,r,g,b}`.
+  - Each frame: redraws all active rings as expanding circles with additive
+    blend mode. Each ring starts at radius 0, expands to 110 px over 380 ms.
+  - Fade: quadratic `(1-p)²` falloff — fast at first, longer tail.
+  - Thickness: shrinks from 9 px to 1 px as the ring expands.
+  - Colour: tinted to the killed enemy's colour (same source as `ScorePopup`).
+  - Pool cap: 8 concurrent rings; oldest dropped on overflow.
+  - Fires immediately on kill (no beat-sync delay), synced to the same game
+    tick as hitstop — both effects trigger together.
+  - `clear()` on reset. `destroy()` unsubscribes the kill listener.
+- Config: `juice.hitstopDistortion` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge, description
+  explaining the 380 ms fade.
+- Integrated into `world.ts`: `distortion.step(dt)` added to all three code
+  paths (death-cam, hitstop-pause, normal playing loop).
+- 9 new tests in `tests/hitstop-distortion.test.ts`: toggle guard, ring added
+  on kill, ring position, ring expiry after duration, ring still alive mid-flight,
+  clear removes all, pool cap at 8 (drops oldest), drawCircle call count, destroy
+  unsubscribes.
+- Total: **145 tests, all passing** (was 136).
+- Bundle: 24.60 KB gzip (was 24.22 KB; +0.38 KB).
+
+**Risks:**
+- `Graphics.clear()` + redraw every frame for up to 8 rings. At 60 fps this is
+  480 draws/s — negligible for a vector-draw on GPU. The `clear()` discards the
+  previous geometry; PixiJS batches the new circles in a single draw call.
+- Additive blend can over-brighten busy scenes. At max 8 rings and quadratic
+  fade, the combined alpha dissipates quickly. If playtesting finds it too noisy,
+  reducing MAX_RINGS or DURATION is a one-line config change.
+
+**Toggles added:** `juice.hitstopDistortion` (experimental, default off).
+
 ## 0.18.0 — Iteration 18: Floating Score Delta Popups (2026-05-07)
 
 **Choice: POLISH** — No new feedback, no bugs (pre-existing combo-counter test failures also fixed

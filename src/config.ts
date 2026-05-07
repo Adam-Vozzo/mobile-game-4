@@ -170,6 +170,8 @@ export interface AppConfig {
     comboCounter: boolean;
     /** Floating "+N" labels drifting up from each kill, tinted to the enemy colour (experimental). */
     scorePopups: boolean;
+    /** Expanding radial shockwave ring at each kill point, synced to the hitstop freeze frame (experimental). */
+    hitstopDistortion: boolean;
   };
 
   grid: {
@@ -364,6 +366,7 @@ const _DEFAULTS: AppConfig = {
     cameraPunchMagnitude: 20,
     comboCounter: false,
     scorePopups: false,
+    hitstopDistortion: false,
   },
 
   grid: {
