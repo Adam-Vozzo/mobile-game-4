@@ -105,6 +105,21 @@ export interface AppConfig {
       maxConcurrent: number;
       pointValue: number;
     };
+    pinwheel: {
+      /** Collision radius of the central hub. */
+      hubRadius: number;
+      /** Drift speed toward the player (px/s). */
+      speed: number;
+      /** Distance of the orbiting drones from the hub centre. */
+      orbitRadius: number;
+      /** Angular speed of the drone constellation (rad/s). */
+      orbitSpeed: number;
+      /** Collision radius of each drone (bullets absorbed, player lethal). */
+      droneRadius: number;
+      hp: number;
+      maxConcurrent: number;
+      pointValue: number;
+    };
     spawn: {
       /** seconds between spawns at start; will be modulated by spawn director later */
       intervalSeconds: number;
@@ -183,6 +198,8 @@ export interface AppConfig {
     splitterEnemy: boolean;
     /** Enable Snake enemy — segmented body blocks bullets; only the head can be killed (experimental). */
     snakeEnemy: boolean;
+    /** Enable Pinwheel enemy — rotating hub shielded by three orbiting drones that absorb bullets (experimental). */
+    pinwheelEnemy: boolean;
   };
 
   spawnDirector: {
@@ -295,6 +312,16 @@ const _DEFAULTS: AppConfig = {
       maxConcurrent: 3,
       pointValue: 150,
     },
+    pinwheel: {
+      hubRadius: 14,
+      speed: 38,
+      orbitRadius: 46,
+      orbitSpeed: 1.7,
+      droneRadius: 8,
+      hp: 3,
+      maxConcurrent: 2,
+      pointValue: 175,
+    },
     spawn: {
       intervalSeconds: 0.8,
       maxAlive: 24,
@@ -352,6 +379,7 @@ const _DEFAULTS: AppConfig = {
     blackHoleEnemy: false,
     splitterEnemy: false,
     snakeEnemy: false,
+    pinwheelEnemy: false,
   },
 
   spawnDirector: {

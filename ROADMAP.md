@@ -46,11 +46,15 @@ change.
   Position-history ring-buffer drives segment following. `flow.snakeEnemy`
   experimental toggle.
 
+- **Iteration 13: Pinwheel Enemy.** ✅ Landed in v0.13.0.
+  Violet rotating hub (3 HP) shielded by three orbiting drones that absorb
+  bullets. Players must time shots through the rotating 60° gaps. `flow.pinwheelEnemy`
+  experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- Remaining new enemy types: Pinwheel (rotating core + orbiting drones).
 - Main menu shell.
 
 ## Later

@@ -7,6 +7,7 @@ import { Weavers } from './enemies/weaver';
 import { BlackHoles } from './enemies/black-hole';
 import { Splitters, Shards } from './enemies/splitter';
 import { Snakes } from './enemies/snake';
+import { Pinwheels } from './enemies/pinwheel';
 import { ScoreState } from './score';
 import { SpawnDirector } from './spawn-director';
 import { ParticleSystem } from '../fx/particles';
@@ -36,6 +37,7 @@ const FLASH_BH_COLOR = 0xaa00ff;
 const FLASH_SPLITTER_COLOR = 0xffdd00;
 const FLASH_SHARD_COLOR = 0xff8800;
 const FLASH_SNAKE_COLOR = 0x00ffaa;
+const FLASH_PINWHEEL_COLOR = 0xcc44ff;
 
 const FLASH_HIT_COLOR = 0xffffff;
 const FLASH_HIT_ALPHA = 0.55;
@@ -59,6 +61,7 @@ export class World {
   readonly splitters: Splitters;
   readonly shards: Shards;
   readonly snakes: Snakes;
+  readonly pinwheels: Pinwheels;
   readonly particles: ParticleSystem;
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
@@ -97,6 +100,7 @@ export class World {
     this.splitters = new Splitters(renderer.layers.vector);
     this.shards = new Shards(renderer.layers.vector);
     this.snakes = new Snakes(renderer.layers.vector);
+    this.pinwheels = new Pinwheels(renderer.layers.vector);
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
     this.flash = new ScreenFlash(renderer.layers.overlay);
     this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
@@ -130,7 +134,8 @@ export class World {
       this.blackHoles.count +
       this.splitters.count +
       this.shards.count +
-      this.snakes.count
+      this.snakes.count +
+      this.pinwheels.count
     );
   }
 
@@ -160,6 +165,7 @@ export class World {
     this.splitters.releaseAll();
     this.shards.releaseAll();
     this.snakes.releaseAll();
+    this.pinwheels.releaseAll();
     this.bullets.releaseAll();
     this.particles.clear();
     this.flash.clear();
@@ -269,6 +275,10 @@ export class World {
       const e = this.snakes.pool.items[i]!;
       checkAimTarget(e.x, e.y); // target the head
     }
+    for (let i = 0; i < this.pinwheels.count; i++) {
+      const e = this.pinwheels.pool.items[i]!;
+      checkAimTarget(e.x, e.y); // target the hub
+    }
     if (input.hasAim) {
       this.player.setFacing(Math.atan2(input.aimY, input.aimX));
     } else if (hasTarget) {
@@ -307,6 +317,9 @@ export class World {
     }
     if (config.flow.snakeEnemy) {
       this.snakes.step(sdt, w, h, ps.x, ps.y);
+    }
+    if (config.flow.pinwheelEnemy) {
+      this.pinwheels.step(sdt, w, h, ps.x, ps.y);
     }
     this.bullets.step(sdt, w, h);
 
@@ -400,18 +413,31 @@ export class World {
     }
     if (config.flow.newEnemyTypes) {
       const splitterW = config.flow.splitterEnemy ? 0.12 : 0;
-      const snakeW = config.flow.snakeEnemy && this.snakes.count < config.enemies.snake.maxConcurrent ? 0.1 : 0;
+      const snakeW = config.flow.snakeEnemy && this.snakes.count < config.enemies.snake.maxConcurrent ? 0.10 : 0;
+      const pinwheelW = config.flow.pinwheelEnemy && this.pinwheels.count < config.enemies.pinwheel.maxConcurrent ? 0.08 : 0;
       const roll = defaultRng.next();
-      if (roll < 0.45 - splitterW * 0.5 - snakeW * 0.5) {
+      if (roll < 0.45 - splitterW * 0.5 - snakeW * 0.5 - pinwheelW * 0.5) {
         this.wanderers.spawn(x, y);
-      } else if (roll < 0.72 - splitterW * 0.3 - snakeW * 0.3) {
+      } else if (roll < 0.72 - splitterW * 0.3 - snakeW * 0.3 - pinwheelW * 0.3) {
         this.grunts.spawn(x, y);
-      } else if (roll < 1.0 - splitterW - snakeW) {
+      } else if (roll < 1.0 - splitterW - snakeW - pinwheelW) {
         this.weavers.spawn(x, y);
-      } else if (roll < 1.0 - splitterW) {
+      } else if (roll < 1.0 - splitterW - pinwheelW) {
         this.snakes.spawn(x, y);
-      } else {
+      } else if (roll < 1.0 - pinwheelW) {
         this.splitters.spawn(x, y);
+      } else {
+        this.pinwheels.spawn(x, y);
+      }
+    } else if (config.flow.pinwheelEnemy && this.pinwheels.count < config.enemies.pinwheel.maxConcurrent) {
+      if (defaultRng.next() < 0.15) {
+        this.pinwheels.spawn(x, y);
+      } else if (config.flow.snakeEnemy && this.snakes.count < config.enemies.snake.maxConcurrent && defaultRng.next() < 0.18) {
+        this.snakes.spawn(x, y);
+      } else if (config.flow.splitterEnemy && defaultRng.next() < 0.2) {
+        this.splitters.spawn(x, y);
+      } else {
+        this.wanderers.spawn(x, y);
       }
     } else if (config.flow.snakeEnemy && this.snakes.count < config.enemies.snake.maxConcurrent) {
       if (defaultRng.next() < 0.18) {
@@ -444,7 +470,12 @@ export class World {
       this.blackHoles.count < config.enemies.blackHole.maxConcurrent
     ) {
       this.blackHoles.spawn(x, y);
-    } else if (type !== 'black-hole' && type !== 'snake') {
+    } else if (
+      type === 'pinwheel' &&
+      this.pinwheels.count < config.enemies.pinwheel.maxConcurrent
+    ) {
+      this.pinwheels.spawn(x, y);
+    } else if (type !== 'black-hole' && type !== 'snake' && type !== 'pinwheel') {
       this.wanderers.spawn(x, y);
     }
   }
@@ -555,6 +586,43 @@ export class World {
           continue outer_w;
         }
       }
+      // Pinwheel: drones absorb bullets; hub takes damage.
+      for (let ei = this.pinwheels.count - 1; ei >= 0; ei--) {
+        const e = this.pinwheels.pool.items[ei]!;
+        // Check drones first — they absorb bullets silently.
+        const droneR = config.enemies.pinwheel.droneRadius + bulletR;
+        const droneR2 = droneR * droneR;
+        const orbitR = config.enemies.pinwheel.orbitRadius;
+        let droneHit = false;
+        for (let d = 0; d < 3; d++) {
+          const angle = e.orbitAngle + (d * Math.PI * 2) / 3;
+          const droneX = e.x + Math.cos(angle) * orbitR;
+          const droneY = e.y + Math.sin(angle) * orbitR;
+          const ddx = droneX - b.x;
+          const ddy = droneY - b.y;
+          if (ddx * ddx + ddy * ddy <= droneR2) {
+            droneHit = true;
+            break;
+          }
+        }
+        if (droneHit) {
+          this.bullets.releaseAt(bi);
+          continue outer_w;
+        }
+        // Check hub.
+        const hdx = e.x - b.x;
+        const hdy = e.y - b.y;
+        const hubR = config.enemies.pinwheel.hubRadius + bulletR;
+        if (hdx * hdx + hdy * hdy <= hubR * hubR) {
+          if (this.pinwheels.damage(ei)) {
+            this.killPinwheel(ei, e.x, e.y);
+          } else {
+            this.onPinwheelDamaged(e.x, e.y);
+          }
+          this.bullets.releaseAt(bi);
+          continue outer_w;
+        }
+      }
     }
 
     // Skip player collision during invincibility window.
@@ -634,6 +702,30 @@ export class World {
           const sdx = sg.x - ps.x; const sdy = sg.y - ps.y;
           if (sdx * sdx + sdy * sdy <= segR2) {
             this.onPlayerHit(sg.x, sg.y);
+            return;
+          }
+        }
+      }
+      // Pinwheel: touching hub or any drone kills the player.
+      for (let ei = this.pinwheels.count - 1; ei >= 0; ei--) {
+        const e = this.pinwheels.pool.items[ei]!;
+        const hubR = playerR + config.enemies.pinwheel.hubRadius;
+        const hdx = e.x - ps.x; const hdy = e.y - ps.y;
+        if (hdx * hdx + hdy * hdy <= hubR * hubR) {
+          this.onPlayerHit(e.x, e.y);
+          return;
+        }
+        const droneR = playerR + config.enemies.pinwheel.droneRadius;
+        const droneR2 = droneR * droneR;
+        const orbitR = config.enemies.pinwheel.orbitRadius;
+        for (let d = 0; d < 3; d++) {
+          const angle = e.orbitAngle + (d * Math.PI * 2) / 3;
+          const droneX = e.x + Math.cos(angle) * orbitR;
+          const droneY = e.y + Math.sin(angle) * orbitR;
+          const ddx = droneX - ps.x;
+          const ddy = droneY - ps.y;
+          if (ddx * ddx + ddy * ddy <= droneR2) {
+            this.onPlayerHit(droneX, droneY);
             return;
           }
         }
@@ -748,6 +840,38 @@ export class World {
     if (config.juice.screenFlash) {
       this.flash.flash(FLASH_SNAKE_COLOR, 0.14, 0.07);
     }
+  }
+
+  private onPinwheelDamaged(x: number, y: number): void {
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.3), 0xcc44ff, 0.8, 0.5);
+    this.shakeAmp = Math.max(this.shakeAmp, 3 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_PINWHEEL_COLOR, 0.15, 0.07);
+    }
+  }
+
+  private killPinwheel(i: number, x: number, y: number): void {
+    const cfg = config.enemies.pinwheel;
+    this.pinwheels.releaseAt(i);
+    this.score.onKill(cfg.pointValue);
+    // Triple burst — hub core + outer ring + white spark.
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.5), 0xcc44ff, 1.2, 1.0);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.8), 0xee88ff, 1.8, 0.7);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.4), 0xffffff, 2.2, 0.4);
+    this.grid.push(x, y, config.grid.explosionInfluence * 1.3, config.grid.influenceRadius * 1.2);
+    this.shakeAmp = Math.max(this.shakeAmp, 10 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_PINWHEEL_COLOR, 0.45, 0.22);
+    }
+    if (config.juice.hitstopMs > 0) {
+      const frames = Math.max(1, Math.round(config.juice.hitstopMs / (TIMING.SIM_DT * 1000)));
+      this.hitstopFrames = Math.max(this.hitstopFrames, frames);
+    }
+    if (config.juice.slowMoOnBigKill && this.score.multiplier >= SLOW_MO_MULT_THRESHOLD) {
+      this.timeScale = SLOW_MO_SCALE;
+      this.slowMoTimer = SLOW_MO_DURATION;
+    }
+    events.emit('kill', { x, y, r: 0.8, g: 0.27, b: 1, pointValue: cfg.pointValue });
   }
 
   private killSnake(i: number, x: number, y: number): void {
