@@ -51,11 +51,18 @@ change.
   bullets. Players must time shots through the rotating 60° gaps. `flow.pinwheelEnemy`
   experimental toggle.
 
+- **Iteration 14: Main Menu Shell.** ✅ Landed in v0.14.0.
+  Title screen ("NEON DRIFT") with best score, pulsing play button, and
+  "MAIN MENU" escape on game-over. Loop starts paused; reactive grid
+  shows through the semi-transparent overlay.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
-- Main menu shell.
+- PROMOTE/DEMOTE pass: promote well-liked experimental enemy toggles to
+  default-on once playtest data arrives.
+- Polish: per-kill camera punch synced to drum hits.
 
 ## Later
 

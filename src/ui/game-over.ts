@@ -6,7 +6,7 @@ export class GameOverOverlay {
   private peakEl: HTMLElement;
   private newBestEl: HTMLElement;
 
-  constructor(host: HTMLElement, onRetry: () => void) {
+  constructor(host: HTMLElement, onRetry: () => void, onMenu?: () => void) {
     this.el = document.createElement('div');
     this.el.id = 'game-over';
     this.el.innerHTML = `
@@ -28,6 +28,7 @@ export class GameOverOverlay {
           </div>
         </div>
         <button class="go-retry" id="go-retry">PLAY AGAIN</button>
+        <button class="go-menu" id="go-menu">MAIN MENU</button>
       </div>
     `;
     this.el.style.display = 'none';
@@ -42,6 +43,16 @@ export class GameOverOverlay {
       this.hide();
       onRetry();
     });
+
+    const menuBtn = this.el.querySelector('#go-menu') as HTMLButtonElement;
+    if (onMenu) {
+      menuBtn.addEventListener('click', () => {
+        this.hide();
+        onMenu();
+      });
+    } else {
+      menuBtn.style.display = 'none';
+    }
   }
 
   show(score: number, bestScore: number, peakMultiplier: number): void {
