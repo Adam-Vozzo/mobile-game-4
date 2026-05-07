@@ -5,6 +5,7 @@ import { Wanderers } from './enemies/wanderer';
 import { Grunts } from './enemies/grunt';
 import { Weavers } from './enemies/weaver';
 import { BlackHoles } from './enemies/black-hole';
+import { Splitters, Shards } from './enemies/splitter';
 import { ScoreState } from './score';
 import { SpawnDirector } from './spawn-director';
 import { ParticleSystem } from '../fx/particles';
@@ -31,6 +32,8 @@ const FLASH_KILL_DURATION = 0.15;
 const FLASH_GRUNT_COLOR = 0xff7700;
 const FLASH_WEAVER_COLOR = 0xaaff00;
 const FLASH_BH_COLOR = 0xaa00ff;
+const FLASH_SPLITTER_COLOR = 0xffdd00;
+const FLASH_SHARD_COLOR = 0xff8800;
 
 const FLASH_HIT_COLOR = 0xffffff;
 const FLASH_HIT_ALPHA = 0.55;
@@ -51,6 +54,8 @@ export class World {
   readonly grunts: Grunts;
   readonly weavers: Weavers;
   readonly blackHoles: BlackHoles;
+  readonly splitters: Splitters;
+  readonly shards: Shards;
   readonly particles: ParticleSystem;
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
@@ -86,6 +91,8 @@ export class World {
     this.grunts = new Grunts(renderer.layers.vector);
     this.weavers = new Weavers(renderer.layers.vector);
     this.blackHoles = new BlackHoles(renderer.layers.vector);
+    this.splitters = new Splitters(renderer.layers.vector);
+    this.shards = new Shards(renderer.layers.vector);
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
     this.flash = new ScreenFlash(renderer.layers.overlay);
     this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
@@ -116,7 +123,9 @@ export class World {
       this.wanderers.count +
       this.grunts.count +
       this.weavers.count +
-      this.blackHoles.count
+      this.blackHoles.count +
+      this.splitters.count +
+      this.shards.count
     );
   }
 
@@ -143,6 +152,8 @@ export class World {
     this.grunts.releaseAll();
     this.weavers.releaseAll();
     this.blackHoles.releaseAll();
+    this.splitters.releaseAll();
+    this.shards.releaseAll();
     this.bullets.releaseAll();
     this.particles.clear();
     this.flash.clear();
@@ -240,6 +251,14 @@ export class World {
       const e = this.blackHoles.pool.items[i]!;
       checkAimTarget(e.x, e.y);
     }
+    for (let i = 0; i < this.splitters.count; i++) {
+      const e = this.splitters.pool.items[i]!;
+      checkAimTarget(e.x, e.y);
+    }
+    for (let i = 0; i < this.shards.count; i++) {
+      const e = this.shards.pool.items[i]!;
+      checkAimTarget(e.x, e.y);
+    }
     if (input.hasAim) {
       this.player.setFacing(Math.atan2(input.aimY, input.aimX));
     } else if (hasTarget) {
@@ -272,12 +291,17 @@ export class World {
     if (config.flow.blackHoleEnemy && this.blackHoles.count > 0) {
       this.applyBlackHoleGravity(sdt, ps);
     }
+    if (config.flow.splitterEnemy) {
+      this.splitters.step(sdt, w, h);
+      this.shards.step(sdt, w, h, ps.x, ps.y);
+    }
     this.bullets.step(sdt, w, h);
 
     this.collide();
 
     const total =
-      this.wanderers.count + this.grunts.count + this.weavers.count + this.blackHoles.count;
+      this.wanderers.count + this.grunts.count + this.weavers.count + this.blackHoles.count +
+      this.splitters.count + this.shards.count;
     if (config.spawnDirector.enabled) {
       const types = this.director.tick(sdt, total);
       for (const type of types) this.spawnEnemyOfType(type, w, h);
@@ -362,13 +386,22 @@ export class World {
       return;
     }
     if (config.flow.newEnemyTypes) {
+      const splitterW = config.flow.splitterEnemy ? 0.12 : 0;
       const roll = defaultRng.next();
-      if (roll < 0.5) {
+      if (roll < 0.45 - splitterW * 0.5) {
         this.wanderers.spawn(x, y);
-      } else if (roll < 0.8) {
+      } else if (roll < 0.72 - splitterW * 0.3) {
         this.grunts.spawn(x, y);
-      } else {
+      } else if (roll < 1.0 - splitterW) {
         this.weavers.spawn(x, y);
+      } else {
+        this.splitters.spawn(x, y);
+      }
+    } else if (config.flow.splitterEnemy) {
+      if (defaultRng.next() < 0.2) {
+        this.splitters.spawn(x, y);
+      } else {
+        this.wanderers.spawn(x, y);
       }
     } else {
       this.wanderers.spawn(x, y);
@@ -379,6 +412,7 @@ export class World {
     const { x, y } = this.spawnAt(w, h);
     if (type === 'grunt') this.grunts.spawn(x, y);
     else if (type === 'weaver') this.weavers.spawn(x, y);
+    else if (type === 'splitter') this.splitters.spawn(x, y);
     else if (
       type === 'black-hole' &&
       this.blackHoles.count < config.enemies.blackHole.maxConcurrent
@@ -439,6 +473,30 @@ export class World {
           continue outer_w;
         }
       }
+      for (let ei = this.splitters.count - 1; ei >= 0; ei--) {
+        const e = this.splitters.pool.items[ei]!;
+        const dx = e.x - b.x; const dy = e.y - b.y;
+        const r = config.enemies.splitter.radius + bulletR;
+        if (dx * dx + dy * dy <= r * r) {
+          if (this.splitters.damage(ei)) {
+            this.killSplitter(ei, e.x, e.y, ps.x, ps.y);
+          } else {
+            this.onSplitterDamaged(e.x, e.y);
+          }
+          this.bullets.releaseAt(bi);
+          continue outer_w;
+        }
+      }
+      for (let ei = this.shards.count - 1; ei >= 0; ei--) {
+        const e = this.shards.pool.items[ei]!;
+        const dx = e.x - b.x; const dy = e.y - b.y;
+        const r = config.enemies.shard.radius + bulletR;
+        if (dx * dx + dy * dy <= r * r) {
+          this.killShard(ei, e.x, e.y);
+          this.bullets.releaseAt(bi);
+          continue outer_w;
+        }
+      }
     }
 
     // Skip player collision during invincibility window.
@@ -480,6 +538,25 @@ export class World {
         if (dx * dx + dy * dy <= r * r) {
           this.onPlayerHit(e.x, e.y);
           this.killWeaver(ei, e.x, e.y);
+          return;
+        }
+      }
+      for (let ei = this.splitters.count - 1; ei >= 0; ei--) {
+        const e = this.splitters.pool.items[ei]!;
+        const dx = e.x - ps.x; const dy = e.y - ps.y;
+        const r = playerR + config.enemies.splitter.radius;
+        if (dx * dx + dy * dy <= r * r) {
+          this.onPlayerHit(e.x, e.y);
+          return;
+        }
+      }
+      for (let ei = this.shards.count - 1; ei >= 0; ei--) {
+        const e = this.shards.pool.items[ei]!;
+        const dx = e.x - ps.x; const dy = e.y - ps.y;
+        const r = playerR + config.enemies.shard.radius;
+        if (dx * dx + dy * dy <= r * r) {
+          this.onPlayerHit(e.x, e.y);
+          this.killShard(ei, e.x, e.y);
           return;
         }
       }
@@ -552,6 +629,57 @@ export class World {
         }
       }
     }
+  }
+
+  private onSplitterDamaged(x: number, y: number): void {
+    // First hit feedback — small white flash + mild shake (signals "wounded, not dead").
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.3), 0xffdd00, 0.8, 0.6);
+    this.shakeAmp = Math.max(this.shakeAmp, 4 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_SPLITTER_COLOR, 0.18, 0.08);
+    }
+  }
+
+  private killSplitter(i: number, x: number, y: number, playerX: number, playerY: number): void {
+    const cfg = config.enemies.splitter;
+    this.splitters.releaseAt(i);
+    this.score.onKill(cfg.pointValue);
+    // Dramatic split burst.
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.2), 0xffdd00, 1.1, 1.0);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.5), 0xff8800, 1.5, 0.7);
+    this.grid.push(x, y, config.grid.explosionInfluence * 1.1, config.grid.influenceRadius);
+    this.shakeAmp = Math.max(this.shakeAmp, 8 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_SPLITTER_COLOR, 0.38, 0.18);
+    }
+    if (config.juice.hitstopMs > 0) {
+      const frames = Math.max(1, Math.round(config.juice.hitstopMs / (TIMING.SIM_DT * 1000)));
+      this.hitstopFrames = Math.max(this.hitstopFrames, frames);
+    }
+    // Spawn 2 shards aimed at player with ±30° spread.
+    const baseAngle = Math.atan2(playerY - y, playerX - x);
+    const spread = Math.PI / 6;
+    this.shards.spawn(x, y, baseAngle - spread);
+    this.shards.spawn(x, y, baseAngle + spread);
+    events.emit('kill', { x, y, r: 1, g: 0.87, b: 0, pointValue: cfg.pointValue });
+  }
+
+  private killShard(i: number, x: number, y: number): void {
+    const cfg = config.enemies.shard;
+    this.shards.releaseAt(i);
+    this.score.onKill(cfg.pointValue);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.6), 0xff8800, 1.0, 0.7);
+    this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.2), 0xffffff, 1.4, 0.4);
+    this.grid.push(x, y, config.grid.explosionInfluence * 0.6, config.grid.influenceRadius * 0.8);
+    this.shakeAmp = Math.max(this.shakeAmp, 4 * config.juice.screenShakeIntensity);
+    if (config.juice.screenFlash) {
+      this.flash.flash(FLASH_SHARD_COLOR, 0.22, 0.1);
+    }
+    if (config.juice.hitstopMs > 0) {
+      const frames = Math.max(1, Math.round(config.juice.hitstopMs / (TIMING.SIM_DT * 1000)));
+      this.hitstopFrames = Math.max(this.hitstopFrames, frames);
+    }
+    events.emit('kill', { x, y, r: 1, g: 0.53, b: 0, pointValue: cfg.pointValue });
   }
 
   private killWanderer(i: number, x: number, y: number): void {

@@ -2,6 +2,41 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.11.0 — Iteration 11: Splitter Enemy (2026-05-07)
+
+**Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP points to
+"Splitter (splits on death)" as next enemy. Highest risk/reward mechanic of
+the three candidates: creates emergent tension — destroying one threat creates
+two.
+
+**What:**
+- `Splitter` enemy: yellow square, slow drift, 2 HP. Takes 2 shots — first hit
+  gives a small particle + shake + flash to signal "wounded". On death, explodes
+  into a large yellow burst and spawns 2 `Shard` enemies.
+- `Shard` enemy: small orange dart, aggressively homes on player, 1 HP. Spawned
+  ±30° either side of a direct line to the player — creates a spread the player
+  must react to.
+- Both classes in `src/game/enemies/splitter.ts`, following existing pool
+  patterns (object-pooled, additive-blend Graphics).
+- `flow.splitterEnemy` experimental toggle (default off) wired into the Tweaks
+  Menu under Flow. Works both with the flat spawner and the Spawn Director.
+- Spawn Director: Splitter weight rises 0→0.15 between difficulty 0.3→0.8,
+  displacing wanderers proportionally.
+- Visual: Splitter is an axis-aligned square (unique vs diamond/triangle/chevron
+  family already in use). Shard is a small elongated dart that faces the player.
+- `drawSplitter` and `drawShard` added to `src/render/ships.ts` with the same
+  three-layer halo/mid/core stroke approach.
+- 13 new unit tests; total now 79 passing.
+- Bundle: 20.21 KB gzip (no change in headroom vs 500 KB target).
+
+**Risks:**
+- The 2× spawn-on-death can pile up during surges if both the Splitter toggle
+  and Spawn Director are enabled. Shard cap is 96; in the worst case a surge
+  could briefly spike entity count. Monitor via entity overlay.
+- First-hit damage feedback (small flash) may feel subtle. Playtest will tell.
+
+**Toggles added:** `flow.splitterEnemy` (experimental, default off)
+
 ## 0.10.0 — Iteration 10: Black Hole Enemy (2026-05-07)
 
 **Choice: FEATURE** — No feedback, no open PRs, no bugs. Black Hole is the most

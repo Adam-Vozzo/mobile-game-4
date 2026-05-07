@@ -100,6 +100,10 @@ export function buildRegistry(): readonly Tweak[] {
   bhTweak.description =
     'Gravity-well enemy: curves bullets toward it and pulls the player. Requires 5 hits to destroy. High point value (200).';
   reg.push(bhTweak);
+  const splitterTweak = toggle('flow', 'flow.splitterEnemy', 'Splitter enemy', true);
+  splitterTweak.description =
+    'Yellow square enemy (2 HP) that splits into two fast orange Shards on death. Shards home aggressively on the player.';
+  reg.push(splitterTweak);
   const directorTweak = toggle('flow', 'spawnDirector.enabled', 'Spawn director', true);
   directorTweak.description =
     'Escalating pressure over 2 min — spawn rate ramps, enemy mix shifts, random surges spike intensity.';
