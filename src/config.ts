@@ -162,6 +162,10 @@ export interface AppConfig {
     screenFlash: boolean;
     /** Animated screen-edge glow during Spawn Director surge bursts (experimental). */
     surgeIndicator: boolean;
+    /** Directional camera displacement toward each kill, beat-synced to drum hits (experimental). */
+    cameraPunch: boolean;
+    /** Base displacement magnitude in pixels for a 50-point kill. Larger kills scale up to 2.5×. */
+    cameraPunchMagnitude: number;
   };
 
   grid: {
@@ -234,7 +238,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.12.0',
+  buildVersion: '0.15.0',
 
   world: {
     width: 1600,
@@ -352,6 +356,8 @@ const _DEFAULTS: AppConfig = {
     slowMoOnBigKill: false,
     screenFlash: false,
     surgeIndicator: false,
+    cameraPunch: false,
+    cameraPunchMagnitude: 20,
   },
 
   grid: {

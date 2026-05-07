@@ -14,6 +14,7 @@ import { ParticleSystem } from '../fx/particles';
 import { ReactiveGrid } from '../fx/grid';
 import { ScreenFlash } from '../fx/screen-flash';
 import { SurgeGlow } from '../fx/surge-glow';
+import { CameraPunch } from '../fx/camera-punch';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -66,6 +67,7 @@ export class World {
   readonly grid: ReactiveGrid;
   readonly flash: ScreenFlash;
   readonly surgeGlow: SurgeGlow;
+  readonly cameraPunch: CameraPunch;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -104,6 +106,7 @@ export class World {
     this.particles = new ParticleSystem(renderer.layers.particles, renderer.particleTexture);
     this.flash = new ScreenFlash(renderer.layers.overlay);
     this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
+    this.cameraPunch = new CameraPunch(this.player.state);
 
     events.on('musicBeat', ({ isKick }) => {
       if (!config.audio.musicReactivity) return;
@@ -170,6 +173,7 @@ export class World {
     this.particles.clear();
     this.flash.clear();
     this.surgeGlow.clear();
+    this.cameraPunch.clear();
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -192,6 +196,7 @@ export class World {
       this.particles.step(ddt);
       this.grid.step(ddt);
       this.decayShake(dt);
+      this.cameraPunch.step(dt);
       this.flash.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
@@ -203,6 +208,7 @@ export class World {
     if (this.hitstopFrames > 0) {
       this.hitstopFrames--;
       this.decayShake(dt);
+      this.cameraPunch.step(dt);
       this.flash.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
@@ -347,6 +353,7 @@ export class World {
     this.grid.pull(ps.x, ps.y, config.grid.playerInfluence * sdt);
     this.grid.step(sdt);
     this.decayShake(dt);
+    this.cameraPunch.step(dt);
     this.score.step(sdt);
     this.flash.step(dt);
     if (config.juice.surgeIndicator) {
@@ -356,7 +363,10 @@ export class World {
 
   render(_alpha: number): void {
     this.player.render();
-    this.renderer.app.stage.position.set(this.shakeOffsetX, this.shakeOffsetY);
+    this.renderer.app.stage.position.set(
+      this.shakeOffsetX + this.cameraPunch.offsetX,
+      this.shakeOffsetY + this.cameraPunch.offsetY,
+    );
     this.grid.draw();
   }
 

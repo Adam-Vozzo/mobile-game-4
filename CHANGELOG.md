@@ -2,6 +2,49 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.15.0 — Iteration 15: Camera Punch (2026-05-07)
+
+**Choice: POLISH** — No feedback, no bugs, no open PRs. ROADMAP.Next explicitly
+lists "per-kill camera punch synced to drum hits" as the top polish item.
+All 14 previous iterations were FEATURE — the game needs feel refinement.
+
+**What:**
+- `CameraPunch` class in `src/fx/camera-punch.ts`.
+  - On kill: computes direction from player to kill position, queues a punch
+    displacement scaled by `pointValue` (50 pts = 1×, 200 pts = 2.5× cap).
+  - Beat-sync: punch fires on the next `musicBeat` event (kick or snare), so
+    the camera displacement lands in the same audio frame as the drum hit.
+  - Fallback: if no beat arrives within 300ms (music off, or quiet section),
+    fires immediately — never feels delayed.
+  - Spring physics (k=280, damping=22, ζ≈0.66): offset snaps to displacement
+    and springs back with a subtle overshoot. Settles in ~0.36s.
+  - Multiple kills between beats merge into a single capped displacement.
+  - Runs in all game states (normal, hitstop, death-cam) so kills during
+    hitstop still produce a punch on the next beat.
+- Config: `juice.cameraPunch` (bool, default off) and
+  `juice.cameraPunchMagnitude` (px, default 20).
+- Integrated into `world.ts`: `cameraPunch.step(dt)` in all three code paths
+  (normal, hitstop, death-cam); stage position = shake offset + punch offset.
+  `reset()` calls `cameraPunch.clear()`.
+- Tweaks Menu: toggle under Visual juice (experimental) + magnitude slider.
+- 10 new unit tests (zero at rest, directional displacement, beat-sync fire,
+  magnitude scales with point value, spring decay, fallback timer, clear,
+  disabled toggle, destroy cleans up subscriptions).
+- Total: **116 tests passing**.
+- Bundle: 23.62 KB gzip (was 22.94 KB; +0.68 KB).
+
+**Risks:**
+- Beat-sync introduces a variable delay (0–235ms at 128 BPM) between kill and
+  visual. If this feels laggy in playtest, promoting "fires immediately" as the
+  default path is trivial (remove the beat queue). The fallback timer already
+  covers the music-off case.
+- Camera punch compounds with existing screen shake. At high enemy density,
+  overlapping punches are capped at 3× magnitude — should prevent nausea but
+  needs playtest verification.
+
+**Toggles added:** `juice.cameraPunch` (experimental, default off),
+`juice.cameraPunchMagnitude` slider.
+
 ## 0.14.0 — Iteration 14: Main Menu Shell (2026-05-07)
 
 **Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP.Next lists
