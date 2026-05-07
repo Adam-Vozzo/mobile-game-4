@@ -2,6 +2,46 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.14.0 — Iteration 14: Main Menu Shell (2026-05-07)
+
+**Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP.Next lists
+"Main menu shell" explicitly. The game currently drops players into live combat
+with no context; a title screen completes the basic game flow loop.
+
+**What:**
+- `MainMenu` class in `src/ui/main-menu.ts`. Fullscreen overlay shown on boot,
+  z-index 150 (above HUD at 10, below game-over at 200, below tweaks at 1000).
+  - **NEON DRIFT** title in large cyan glowing text (`clamp(56px, 10vw, 88px)`).
+  - Tagline "CHAIN KILLS · BUILD MULTIPLIER · SURVIVE" in dim caps.
+  - Best score row (hidden until a score > 0 has been saved to localStorage).
+  - **TAP TO PLAY** button with a gentle pulsing glow animation.
+  - "4-FINGER TAP FOR SETTINGS" hint in dim text.
+  - Deliberately semi-transparent background (`rgba(0,0,0,0.72)`) so the live
+    reactive grid shows through — provides atmospheric movement with zero
+    gameplay active.
+- **Flow on boot**: `loop.start()` is called with `loop.setPaused(true)`.
+  The render loop runs (grid animates), simulation does not (no enemies, no
+  physics). `mainMenu.show()` is called after all setup completes.
+- **"TAP TO PLAY"**: hides menu, calls `startGame()` → `world.reset()`,
+  `loop.setPaused(false)`, `musicEngine.start()`.
+- **"MAIN MENU" button** added to the game-over overlay (secondary, dim — below
+  the primary "PLAY AGAIN" CTA). Routes to `returnToMenu()` → `world.reset()`,
+  `loop.setPaused(true)`, `musicEngine.stop()`, `mainMenu.show()`. If no
+  `onMenu` callback is provided, the button is hidden (backwards-compatible).
+- Smoke test updated to click `#mm-play` before the game-interaction loop.
+- 106 tests still passing (no new unit tests needed — UI overlay has no
+  extractable pure logic).
+- Bundle: 22.94 KB gzip (no change — CSS additions are compressed alongside
+  existing styles).
+
+**Risks:**
+- The "MAIN MENU" button on game-over adds a new escape route that skips the
+  retry flow. Risk is low: it's a secondary action, subdued visually.
+- `world.reset()` is called at every entry to `startGame()` — harmless double
+  reset on first play but consistent with the retry path.
+
+**Toggles added:** none
+
 ## 0.13.0 — Iteration 13: Pinwheel Enemy (2026-05-07)
 
 **Choice: FEATURE** — No feedback, no bugs, no open PRs. ROADMAP.Next lists

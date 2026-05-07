@@ -15,6 +15,7 @@ import { FourFingerTap } from './tweaks/gesture';
 import { audioBus } from './audio/bus';
 import { musicEngine } from './audio/music';
 import { GameOverOverlay } from './ui/game-over';
+import { MainMenu } from './ui/main-menu';
 import { events } from './engine/events';
 
 function makeScheme(s: ControlScheme): ControlSchemeImpl {
@@ -50,11 +51,22 @@ async function main(): Promise<void> {
   renderer.app.renderer.on('resize', () => world.onResize());
   window.addEventListener('orientationchange', () => world.onResize());
 
-  const gameOver = new GameOverOverlay(host, () => {
+  const startGame = (): void => {
     world.reset();
     loop.setPaused(false);
     musicEngine.start();
-  });
+  };
+
+  const returnToMenu = (): void => {
+    world.reset();
+    loop.setPaused(true);
+    musicEngine.stop();
+    mainMenu.show();
+  };
+
+  const mainMenu = new MainMenu(host, startGame);
+
+  const gameOver = new GameOverOverlay(host, startGame, returnToMenu);
 
   events.on('gameOver', (e) => {
     // Small delay so the death-cam particles can be appreciated.
@@ -73,6 +85,8 @@ async function main(): Promise<void> {
       tweaks?.feedFrameInfo(info);
     },
   });
+  // Start paused — the main menu unpauses on "play".
+  loop.setPaused(true);
   loop.start();
 
   // Tweaks Menu
@@ -140,6 +154,9 @@ async function main(): Promise<void> {
   };
 
   await registerServiceWorker();
+
+  // Show the main menu — player must tap "play" to start the loop.
+  mainMenu.show();
 }
 
 main().catch((err) => {

@@ -47,6 +47,13 @@ test('app boots, exposes __game, no fatal console errors', async ({ page }, test
     throw err;
   }
 
+  // Dismiss the main menu so the game loop starts.
+  const playBtn = page.locator('#mm-play');
+  if (await playBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    await playBtn.click();
+    await page.waitForTimeout(200);
+  }
+
   // Light interaction so kills + particles can fire.
   const box = (await page.locator('#app').boundingBox())!;
   const cx = box.x + box.width / 2;

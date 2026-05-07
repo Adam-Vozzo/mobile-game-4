@@ -532,3 +532,155 @@ canvas {
 .go-retry:active {
   background: rgba(0, 255, 247, 0.2);
 }
+
+.go-menu {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: rgba(0, 255, 247, 0.45);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+
+.go-menu:hover,
+.go-menu:focus-visible {
+  color: rgba(0, 255, 247, 0.9);
+  outline: none;
+}
+
+/* ─── Main menu overlay ─────────────────────────────────────────────── */
+
+#main-menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  /* Deliberately semi-transparent so the live grid shows through. */
+  background: rgba(0, 0, 0, 0.72);
+  animation: mm-fade-in 0.6s ease-out both;
+}
+
+@keyframes mm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mm-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  padding: 48px 56px;
+  border: 1px solid rgba(0, 255, 247, 0.2);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 60px rgba(0, 255, 247, 0.06),
+    inset 0 0 80px rgba(0, 0, 0, 0.5);
+}
+
+.mm-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.mm-subtitle {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: rgba(0, 255, 247, 0.45);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.mm-title {
+  font-size: clamp(56px, 10vw, 88px);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  line-height: 0.92;
+  text-align: center;
+  text-transform: uppercase;
+  color: #00fff7;
+  text-shadow:
+    0 0 14px #00fff7,
+    0 0 40px rgba(0, 255, 247, 0.55),
+    0 0 80px rgba(0, 255, 247, 0.25);
+}
+
+.mm-best {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.mm-best-label {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(0, 255, 247, 0.5);
+  text-transform: uppercase;
+}
+
+.mm-best-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-feature-settings: 'tnum';
+  color: #fff;
+  text-shadow:
+    0 0 6px #00fff7,
+    0 0 16px rgba(0, 255, 247, 0.5);
+}
+
+.mm-play {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 247, 0.7);
+  color: #00fff7;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 16px 52px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+  animation: mm-btn-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes mm-btn-pulse {
+  from {
+    box-shadow: 0 0 10px rgba(0, 255, 247, 0.15);
+    border-color: rgba(0, 255, 247, 0.5);
+  }
+  to {
+    box-shadow: 0 0 28px rgba(0, 255, 247, 0.4);
+    border-color: rgba(0, 255, 247, 0.9);
+  }
+}
+
+.mm-play:hover,
+.mm-play:focus-visible {
+  background: rgba(0, 255, 247, 0.1);
+  box-shadow: 0 0 32px rgba(0, 255, 247, 0.35);
+  outline: none;
+}
+
+.mm-play:active {
+  background: rgba(0, 255, 247, 0.22);
+}
+
+.mm-hint {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(0, 255, 247, 0.25);
+  text-transform: uppercase;
+}
