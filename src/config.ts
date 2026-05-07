@@ -109,6 +109,8 @@ export interface AppConfig {
     slowMoOnBigKill: boolean;
     /** Full-screen colour flash on kill / player-hit events. */
     screenFlash: boolean;
+    /** Animated screen-edge glow during Spawn Director surge bursts (experimental). */
+    surgeIndicator: boolean;
   };
 
   grid: {
@@ -173,7 +175,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.8.0',
+  buildVersion: '0.9.0',
 
   world: {
     width: 1600,
@@ -249,6 +251,7 @@ const _DEFAULTS: AppConfig = {
     hitstopMs: 0,
     slowMoOnBigKill: false,
     screenFlash: false,
+    surgeIndicator: false,
   },
 
   grid: {

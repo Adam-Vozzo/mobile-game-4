@@ -30,6 +30,9 @@ change.
   `SpawnDirector` class — difficulty curve (0→1 over 120 s), interpolated
   spawn interval, escalating enemy mix, random surge bursts. Experimental
   toggle `spawnDirector.enabled`.
+- **Iteration 9: Surge Visual Indicator.** ✅ Landed in v0.9.0.
+  `SurgeGlow` FX class — orange screen-edge pulsing glow during surge bursts.
+  `surgeChange` event added to event bus. `juice.surgeIndicator` experimental toggle.
 
 ## Next
 
@@ -38,7 +41,6 @@ change.
 - 2–4 more enemy types: Snake (chains of segments), Black Hole (gravity well),
   Pinwheel (orbiting drones), Splitter (splits on death).
 - Main menu shell.
-- Surge visual indicator — brief edge-glow or colour shift to signal surge state to player.
 
 ## Later
 
