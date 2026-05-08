@@ -226,6 +226,10 @@ export interface AppConfig {
     dangerClose: boolean;
     /** Speed multiplier applied to all enemies while Danger Close is active. */
     dangerCloseSpeedMult: number;
+    /** Smart Bomb — press B/BOMB to instantly destroy all enemies and score each kill at current multiplier (experimental). */
+    bomb: boolean;
+    /** Multiplier level at which the player earns a new bomb charge (e.g. 8 = recharge at ×8). */
+    bombChargeThreshold: number;
   };
 
   spawnDirector: {
@@ -260,7 +264,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.26.0',
+  buildVersion: '0.27.0',
 
   world: {
     width: 1600,
@@ -419,6 +423,8 @@ const _DEFAULTS: AppConfig = {
     pinwheelEnemy: false,
     dangerClose: false,
     dangerCloseSpeedMult: 1.7,
+    bomb: false,
+    bombChargeThreshold: 8,
   },
 
   spawnDirector: {

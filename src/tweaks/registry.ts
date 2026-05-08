@@ -158,6 +158,11 @@ export function buildRegistry(): readonly Tweak[] {
     'Hold Shift (keyboard) or the LURE button (touch) to enter danger mode: all enemies move 70% faster, but each kill grants +1 extra multiplier on top of the normal chain bonus. Hold the chaos, reap the reward.';
   reg.push(dcTweak);
   reg.push(slider('flow', 'flow.dangerCloseSpeedMult', 'Danger speed multiplier', 1.1, 3.0, 0.1, '×', true));
+  const bombTweak = toggle('flow', 'flow.bomb', 'Smart Bomb (screen clear)', true);
+  bombTweak.description =
+    'Start each game with one bomb charge. Press B (keyboard) or the BOMB button (touch) to instantly destroy all on-screen enemies — each kill scores at your current multiplier. Recharge by reaching the multiplier threshold.';
+  reg.push(bombTweak);
+  reg.push(slider('flow', 'flow.bombChargeThreshold', 'Bomb recharge at ×', 2, 20, 1, '×', true));
   const directorTweak = toggle('flow', 'spawnDirector.enabled', 'Spawn director', true);
   directorTweak.description =
     'Escalating pressure over 2 min — spawn rate ramps, enemy mix shifts, random surges spike intensity.';

@@ -116,10 +116,13 @@ change.
   to speed enemies up 70% and gain extra multiplier per kill. `flow.dangerClose`
   experimental toggle + `flow.dangerCloseSpeedMult` slider.
 
+- **Feature: Smart Bomb.** ✅ Landed in v0.27.0. Press B/BOMB to instantly destroy
+  all on-screen enemies, scoring each at current multiplier. Recharges at ×8 multiplier.
+  `flow.bomb` experimental toggle + `flow.bombChargeThreshold` slider.
+
 ## Later
 
 - Second mode (probably Pacifism or Sequence).
-- Bomb / smart-bomb mechanic (only if it serves the multiplier loop).
 - Music-reactive grid/particle flourishes.
 - Adaptive quality only as a graceful degradation toggle for genuinely low-end
   devices. Never a default.
@@ -132,3 +135,5 @@ change.
 - Danger Close touch button refinement — bottom-left conflicts with movement drag; try top-right or hold-anywhere.
 - Danger Close visual escalation — ring colour shifts yellow→orange→red as speed multiplier increases.
 - Danger Close audio cue — a low drone/heartbeat SFX while active to reinforce tension.
+- Bomb visual escalation — screen-edge crackling arc effect on the detonation frame.
+- Bomb sound — deep bass thump + high-frequency crackle on detonation.
