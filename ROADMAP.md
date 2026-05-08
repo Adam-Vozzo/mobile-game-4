@@ -99,6 +99,11 @@ change.
   zero per-frame GPU cost. `juice.bulletTracers` experimental toggle. Also
   fixed a pre-existing `noUncheckedIndexedAccess` build error in player-trail.
 
+- **Iteration 24: Enemy Hit Flash.** ✅ Landed in v0.24.0.
+  White additive disc (radius × 1.45) at the bullet impact point, 100 ms
+  linear fade. Fires on all hit events — non-lethal damage (multi-HP enemies)
+  and kill events (all types). `juice.enemyHitFlash` experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
@@ -106,8 +111,7 @@ change.
 - PROMOTE/DEMOTE pass: promote well-liked experimental toggles to
   default-on once playtest data arrives.
 - Polish: per-enemy kill sound variation (pitch shift or timbre per type).
-- Polish: enemy hit flash (brief white flash on the enemy when a bullet
-  connects — clearer hit registration read).
+- Polish: per-enemy kill sound variation (pitch shift or timbre per type).
 
 ## Later
 

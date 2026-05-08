@@ -116,6 +116,10 @@ export function buildRegistry(): readonly Tweak[] {
   bulletTracersTweak.description =
     'Short additive streak behind each bullet — three stacked layers (halo, glow, core) tapering away from the tip. Pre-baked geometry; only position and rotation update per frame.';
   reg.push(bulletTracersTweak);
+  const enemyHitFlashTweak = toggle('visual', 'juice.enemyHitFlash', 'Enemy hit flash', true);
+  enemyHitFlashTweak.description =
+    'Brief white additive disc at the impact point whenever a bullet connects with an enemy. Especially readable on multi-HP enemies (Splitter, Snake, Black Hole, Pinwheel) where no explosion provides immediate kill feedback.';
+  reg.push(enemyHitFlashTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));

@@ -180,6 +180,8 @@ export interface AppConfig {
     playerTrail: boolean;
     /** Short additive streak behind each bullet indicating velocity direction (experimental). */
     bulletTracers: boolean;
+    /** Brief white additive flash on an enemy when a bullet connects — clearest for multi-HP enemies (experimental). */
+    enemyHitFlash: boolean;
   };
 
   grid: {
@@ -252,7 +254,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.21.0',
+  buildVersion: '0.24.0',
 
   world: {
     width: 1600,
@@ -379,6 +381,7 @@ const _DEFAULTS: AppConfig = {
     dangerVignette: false,
     playerTrail: false,
     bulletTracers: false,
+    enemyHitFlash: false,
   },
 
   grid: {
