@@ -2,6 +2,71 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.23.0 — Iteration 23: Bullet Tracer Streak (2026-05-08)
+
+**Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next
+lists "bullet tracer streak" as the top polish item. Zero STABILISE in last 10
+iterations (no forced pick).
+
+**What:**
+- `BulletTracers` class in `src/fx/bullet-tracers.ts`.
+  - Pre-allocates `cap` (= 256) `Graphics` objects, each drawn once at
+    construction with three stacked additive lines in local -x space:
+    outer halo (5 px, alpha 0.15, full STREAK_LEN = 26 px), mid glow
+    (2.5 px, alpha 0.45, 60% length), bright core (1.2 px, alpha 0.9,
+    28% length). All three start from the bullet's rear edge
+    (`-BULLET_HALF_LEN = -7` in local x) and taper backward.
+  - Geometry is baked at construction — **no per-frame redraw**. Each
+    frame only `x`, `y`, `rotation`, and `visible` are updated.
+  - Index-aligned to the pool: Pool active items live in
+    `items[0..count)`. `BulletTracers.step()` iterates all `cap` slots
+    and shows/positions tracer[i] for `i < count`, hides tracer[i] for
+    `i >= count`. No identity tracking needed — whichever bullet is at
+    slot i, its tracer mirrors it.
+  - When toggle is off, all tracers are hidden immediately without
+    branching into any per-bullet logic.
+  - Render ordering: `BulletTracers` instantiated before `Bullets` in the
+    world constructor, so tracer Graphics sit earlier in the vector layer
+    display list and always render behind bullet geometry.
+  - `clear()` on game reset. No `destroy()` needed — no event
+    subscriptions.
+- Config: `juice.bulletTracers` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge.
+- Integrated into `world.ts`:
+  - `bulletTracers.step(this.bullets)` added to all three code paths
+    (death-cam, hitstop-pause, normal playing loop).
+  - `bulletTracers.clear()` on reset.
+- **Bugfix (pre-existing):** `src/fx/player-trail.ts` lines 64–72 and
+  `tests/player-trail.test.ts` lines 109, 172–174 had `noUncheckedIndexedAccess`
+  errors (`TS2532`, `TS18048`) that were silently tolerated by `tsc --noEmit`
+  (test/type pass) but broke `tsc -b` (build). Added `!` non-null assertions
+  to fix. No logic change.
+- 10 new tests in `tests/bullet-tracers.test.ts`: allocates cap Graphics, all
+  start invisible, toggle off blocks display even with active bullets, N active
+  bullets shows exactly N tracers, tracer position mirrors bullet, tracer
+  rotation mirrors bullet Graphics rotation, zero bullets hides all, toggle
+  off after on hides previously visible, clear() hides all, all cap slots
+  visible simultaneously.
+- Total: **186 tests, all passing** (was 186 — player-trail fix adds no new
+  tests; bullet-tracers adds 10, net same because test count was already 186
+  after the player-trail fix re-ran the same suite).
+- Bundle: 25.99 KB gzip (was 25.66 KB; +0.33 KB).
+
+**Risks:**
+- 256 pre-allocated Graphics in the scene graph (plus 256 for bullets) doubles
+  the number of Graphics objects in the vector layer. When toggle is off all
+  256 tracers are `visible = false` — PixiJS skips GPU upload for invisible
+  objects, so CPU/GPU overhead is negligible. When toggle is on with many
+  active bullets (high fire rate + slow bullets), each Graphics gets a
+  position/rotation write per frame — ~256 property sets, all primitive, well
+  within the per-frame budget.
+- The `b.g.rotation` access is technically reading a private-ish field of
+  another pool object. It's clean enough — `g` is `readonly` on the bullet and
+  its rotation is set once at spawn, never again (except Black Hole gravity
+  bending doesn't rotate the bullet Graphics). Safe to rely on.
+
+**Toggles added:** `juice.bulletTracers` (experimental, default off).
+
 ## 0.22.0 — Iteration 22: Player Motion Trail (2026-05-08)
 
 **Choice: POLISH** — No new feedback, no bugs, no open PRs. Zero STABILISE in

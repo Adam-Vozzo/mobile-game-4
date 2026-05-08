@@ -112,6 +112,10 @@ export function buildRegistry(): readonly Tweak[] {
   playerTrailTweak.description =
     'Ghost afterimage trail behind the player ship while moving. Eight fading copies sampled every ~45 ms; trail decays over ~360 ms when the player slows or stops.';
   reg.push(playerTrailTweak);
+  const bulletTracersTweak = toggle('visual', 'juice.bulletTracers', 'Bullet tracer streak', true);
+  bulletTracersTweak.description =
+    'Short additive streak behind each bullet — three stacked layers (halo, glow, core) tapering away from the tip. Pre-baked geometry; only position and rotation update per frame.';
+  reg.push(bulletTracersTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));

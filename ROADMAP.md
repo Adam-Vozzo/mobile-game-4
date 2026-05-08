@@ -93,6 +93,12 @@ change.
   with a linear alpha ramp over ≤ 360 ms. Suppressed when stopped, dead, or
   blinking. `juice.playerTrail` experimental toggle.
 
+- **Iteration 23: Bullet Tracer Streak.** ✅ Landed in v0.23.0.
+  Short additive streak (26 px) behind each bullet — three stacked layers
+  (halo/glow/core) tapering away from the bullet rear. Pre-baked geometry,
+  zero per-frame GPU cost. `juice.bulletTracers` experimental toggle. Also
+  fixed a pre-existing `noUncheckedIndexedAccess` build error in player-trail.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
@@ -100,8 +106,8 @@ change.
 - PROMOTE/DEMOTE pass: promote well-liked experimental toggles to
   default-on once playtest data arrives.
 - Polish: per-enemy kill sound variation (pitch shift or timbre per type).
-- Polish: bullet tracer streak (short additive streak behind each bullet for
-  speed read).
+- Polish: enemy hit flash (brief white flash on the enemy when a bullet
+  connects — clearer hit registration read).
 
 ## Later
 

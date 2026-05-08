@@ -60,16 +60,17 @@ export class PlayerTrail {
     const n = this.snapshots.length;
     const visible = player.alive && !player.blink;
     for (let i = 0; i < TRAIL_LENGTH; i++) {
+      const ghost = this.ghosts[i]!;
       if (!visible || i >= n) {
-        this.ghosts[i].alpha = 0;
+        ghost.alpha = 0;
         continue;
       }
-      const snap = this.snapshots[i]; // 0 = oldest, n-1 = newest
-      this.ghosts[i].x = snap.x;
-      this.ghosts[i].y = snap.y;
-      this.ghosts[i].rotation = snap.rot;
+      const snap = this.snapshots[i]!; // 0 = oldest, n-1 = newest
+      ghost.x = snap.x;
+      ghost.y = snap.y;
+      ghost.rotation = snap.rot;
       // Linear ramp: oldest ghost → dim, newest ghost → ALPHA_MAX.
-      this.ghosts[i].alpha = ((i + 1) / n) * ALPHA_MAX;
+      ghost.alpha = ((i + 1) / n) * ALPHA_MAX;
     }
   }
 

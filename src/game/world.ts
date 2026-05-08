@@ -19,6 +19,7 @@ import { HitstopDistortion } from '../fx/hitstop-distortion';
 import { PlayerDeathShockwave } from '../fx/player-death-shockwave';
 import { DangerVignette } from '../fx/danger-vignette';
 import { PlayerTrail } from '../fx/player-trail';
+import { BulletTracers } from '../fx/bullet-tracers';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -76,6 +77,7 @@ export class World {
   readonly deathShockwave: PlayerDeathShockwave;
   readonly dangerVignette: DangerVignette;
   readonly playerTrail: PlayerTrail;
+  readonly bulletTracers: BulletTracers;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -104,6 +106,8 @@ export class World {
     // Trail must be added to vector before Player so it renders behind the ship.
     this.playerTrail = new PlayerTrail(renderer.layers.vector);
     this.player = new Player(renderer.layers.vector, center.x, center.y);
+    // Tracers added before bullets so they render behind the bullet geometry.
+    this.bulletTracers = new BulletTracers(renderer.layers.vector, 256);
     this.bullets = new Bullets(renderer.layers.vector);
     this.wanderers = new Wanderers(renderer.layers.vector);
     this.grunts = new Grunts(renderer.layers.vector);
@@ -191,6 +195,7 @@ export class World {
     this.deathShockwave.clear();
     this.dangerVignette.clear();
     this.playerTrail.clear();
+    this.bulletTracers.clear();
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -219,6 +224,7 @@ export class World {
       this.deathShockwave.step(dt);
       this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
       this.playerTrail.step(dt, this.player.state);
+      this.bulletTracers.step(this.bullets);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -235,6 +241,7 @@ export class World {
       this.deathShockwave.step(dt);
       this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
       this.playerTrail.step(dt, this.player.state);
+      this.bulletTracers.step(this.bullets);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -385,6 +392,7 @@ export class World {
     this.deathShockwave.step(dt);
     this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
     this.playerTrail.step(dt, this.player.state);
+    this.bulletTracers.step(this.bullets);
     if (config.juice.surgeIndicator) {
       this.surgeGlow.step(dt, this.renderer.viewport);
     }
