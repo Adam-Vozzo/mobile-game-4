@@ -2,6 +2,73 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.27.0 — Iteration 27: Smart Bomb (2026-05-08)
+
+**Choice: FEATURE** — No feedback to address, no bugs, no open PRs. No STABILISE in last 10.
+The multiplier loop (Design Pillar 5) had a voluntary risk dial (Danger Close) but no
+"nova moment" — no high-stakes pay-off ability that converts accumulated multiplier into a
+spectacular screen-clear. Smart Bomb fills this gap. Taken from the Ideas pool (bomb/smart-bomb
+mechanic from the Later section).
+
+**What:**
+- `flow.bomb: boolean` (default false) and `flow.bombChargeThreshold: number` (default 8)
+  added to `AppConfig`.
+- `checkBombRecharge(charges, mult, prevMult, threshold): number` — pure exported helper in
+  `world.ts` for the crossing-detection logic. Used both in the live `step()` and in tests.
+- `World.bombCharges: number` (public) — starts at 1 when `flow.bomb` is on, 0 otherwise.
+  Reset on `world.reset()`. Set to 1 when multiplier crosses `bombChargeThreshold` from below.
+- `World._bombMultPrev: number` (private) — previous-frame multiplier snapshot for
+  threshold-crossing detection; reset on `world.reset()`.
+- `World.detonateBomb()` (public) — guards on `config.flow.bomb`, `bombCharges > 0`, and
+  `gameState === 'playing'`. Decrements charges. Fires a white nova flash (alpha 0.85, 0.55 s —
+  brighter and longer than any per-kill flash). Applies heavy screen shake (30 × intensity).
+  Then kills all alive enemies in pool order: Wanderers → Grunts → Weavers → BlackHoles →
+  Splitters → Snakes → Pinwheels → Shards (last, to clean up any shards spawned by Splitters).
+  Each kill triggers all existing FX (particles, shockwave rings, camera punch, score popups,
+  hit flash) naturally through the existing kill methods, so the detonation chains into the
+  same juice system with no extra code.
+- Recharge in `step()`: when `flow.bomb` is on, each tick compares `score.multiplier` against
+  `_bombMultPrev`. If the multiplier just crossed `bombChargeThreshold` from below and
+  `bombCharges < 1`, charges becomes 1. This means building to ×8 (or whatever the slider is
+  set to) rewards the player with another bomb, creating a loop: bomb clears enemies → chain
+  kills → multiplier → next bomb.
+- Input: `B` key (keyboard); `BOMB` touch button (`.bomb-btn`, bottom-right, appears only when
+  toggle is on). Button gains `.bomb-btn--empty` class (faded, pointer-events: none) when no
+  charges — consistent with the HUD indicator.
+- HUD: `<span class="hud-bomb" id="hud-bomb">` added to the top-left HUD row. Shows `◈ BOMB`
+  (cyan glow) when charged, `◈` (dimmed) when empty, nothing when toggle is off. `HUD.update()`
+  gains an optional `bombCharges` parameter (defaults to 0); `HUD.invalidate()` forces a full
+  re-render on config change.
+- `onConfigChanged` in `main.ts` now also toggles `bombBtn` visibility and calls `hud.invalidate()`
+  so the bomb indicator appears/disappears immediately when the toggle is flipped.
+- Tweaks: `flow.bomb` (experimental toggle, default off) and `flow.bombChargeThreshold`
+  (experimental slider, 2–20 step 1).
+- Tests: 12 new tests in `tests/bomb.test.ts`:
+  - Config defaults: `flow.bomb = false`, `flow.bombChargeThreshold = 8`.
+  - `checkBombRecharge`: returns 1 on threshold crossing; returns 0 below threshold; no
+    re-trigger when prevMult already at threshold; no double-charge when already 1; crossing
+    by jump (mult=10, prev=7, threshold=8); custom threshold values; initial state (0,0,8).
+- Total: **233 tests, all passing** (was 221).
+- Bundle: 28.79 KB gzip (was 28.08 KB; +0.71 KB).
+
+**Risks:**
+- Detonation chains through existing kill methods: each kill fires hitstop, slow-mo check,
+  and screen-flash. With 20+ enemies on screen, these stack (shakeAmp takes max; hitstopFrames
+  takes max; screenFlash from the kill methods will fire but is immediately overridden by the
+  stronger bomb nova flash which was applied first). No visual regression — tested via smoke test.
+- Splitter shards: Splitters are killed before Shards in the loop, so any shards spawned by
+  Splitters are cleaned up in the same bomb detonation. This is intentional — the bomb is
+  meant to clear the board entirely.
+- Touch button bottom-right: This position avoids the lure-btn conflict (bottom-left) but may
+  conflict with right-hand aim controls on virtual-twin-sticks scheme. Low probability since
+  the bomb button appears only when both `flow.bomb` AND `flow.newEnemyTypes` (or similar) is
+  on. If playtesting confirms a conflict, a one-line CSS fix moves it.
+- Bomb with no enemies: detonation with 0 alive enemies still fires the nova flash and costs a
+  charge. That's intentional — it's a panic button, and firing it into empty space has
+  opportunity cost.
+
+**Toggles added:** `flow.bomb` (experimental, default off), `flow.bombChargeThreshold` (experimental slider, default 8).
+
 ## 0.26.0 — Iteration 26: Danger Close — Risk Modifier (2026-05-08)
 
 **Choice: FEATURE** — No feedback to address, no bugs, no open PRs. No STABILISE in last 10.

@@ -84,7 +84,7 @@ async function main(): Promise<void> {
     step: (dt) => world.step(dt, controls, input),
     render: (alpha) => {
       world.render(alpha);
-      hud.update(world.score, lastFrame, world.lives);
+      hud.update(world.score, lastFrame, world.lives, world.bombCharges);
       comboCounter.update(world.score.multiplier);
     },
     onFrame: (info) => {
@@ -103,6 +103,8 @@ async function main(): Promise<void> {
         controls.swap(config.controls.scheme, makeScheme);
       }
       lureBtn.style.display = config.flow.dangerClose ? '' : 'none';
+      bombBtn.style.display = config.flow.bomb ? '' : 'none';
+      hud.invalidate();
     },
     onOpen: () => loop.setPaused(true),
     onClose: () => loop.setPaused(false),
@@ -132,6 +134,9 @@ async function main(): Promise<void> {
     if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && config.flow.dangerClose) {
       world.dangerActive = true;
     }
+    if (e.code === 'KeyB' && config.flow.bomb) {
+      world.detonateBomb();
+    }
   });
   window.addEventListener('keyup', (e) => {
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
@@ -155,6 +160,20 @@ async function main(): Promise<void> {
   lureBtn.addEventListener('pointerup', () => { world.dangerActive = false; }, { passive: true });
   lureBtn.addEventListener('pointercancel', () => { world.dangerActive = false; }, { passive: true });
   lureBtn.addEventListener('pointerleave', () => { world.dangerActive = false; }, { passive: true });
+
+  // Smart Bomb touch button — visible only when the toggle is enabled.
+  const bombBtn = document.createElement('button');
+  bombBtn.className = 'bomb-btn';
+  bombBtn.textContent = 'BOMB';
+  document.body.appendChild(bombBtn);
+  const updateBombBtn = (): void => {
+    bombBtn.style.display = config.flow.bomb ? '' : 'none';
+  };
+  updateBombBtn();
+  bombBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    world.detonateBomb();
+  }, { passive: false });
 
   // Try to lock orientation on user gesture (most browsers require it).
   const tryLock = (): void => {

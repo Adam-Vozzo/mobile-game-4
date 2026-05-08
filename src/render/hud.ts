@@ -7,12 +7,14 @@ export class HUD {
   private scoreEl: HTMLElement;
   private multEl: HTMLElement;
   private livesEl: HTMLElement;
+  private bombEl: HTMLElement;
   private perfEl: HTMLElement;
   private particleCounter: () => number = () => 0;
   private entityCounter: () => number = () => 0;
   private lastScore = -1;
   private lastMult = -1;
   private lastLives = -1;
+  private lastBombCharges = -1;
 
   constructor(host: HTMLElement) {
     this.root = document.createElement('div');
@@ -22,6 +24,7 @@ export class HUD {
         <span class="hud-label">Score</span>
         <span class="hud-value" id="hud-score">0</span>
         <span class="hud-lives" id="hud-lives"></span>
+        <span class="hud-bomb" id="hud-bomb"></span>
       </div>
       <div class="hud-row hud-top-right">
         <span class="hud-label">Mult</span>
@@ -34,6 +37,7 @@ export class HUD {
     this.scoreEl = this.root.querySelector('#hud-score') as HTMLElement;
     this.multEl = this.root.querySelector('#hud-mult') as HTMLElement;
     this.livesEl = this.root.querySelector('#hud-lives') as HTMLElement;
+    this.bombEl = this.root.querySelector('#hud-bomb') as HTMLElement;
     this.perfEl = this.root.querySelector('#hud-perf') as HTMLElement;
   }
 
@@ -42,7 +46,15 @@ export class HUD {
     this.entityCounter = entities;
   }
 
-  update(score: ScoreState, frame: FrameInfo | null, lives = 3): void {
+  /** Force all dirty flags so the next update() re-renders every element. */
+  invalidate(): void {
+    this.lastScore = -1;
+    this.lastMult = -1;
+    this.lastLives = -1;
+    this.lastBombCharges = -1;
+  }
+
+  update(score: ScoreState, frame: FrameInfo | null, lives = 3, bombCharges = 0): void {
     if (score.score !== this.lastScore) {
       this.scoreEl.textContent = formatScore(score.score);
       this.lastScore = score.score;
@@ -54,6 +66,15 @@ export class HUD {
     if (lives !== this.lastLives) {
       this.livesEl.innerHTML = renderLives(lives);
       this.lastLives = lives;
+    }
+    if (bombCharges !== this.lastBombCharges) {
+      if (config.flow.bomb) {
+        this.bombEl.textContent = bombCharges > 0 ? '◈ BOMB' : '◈';
+        this.bombEl.className = bombCharges > 0 ? 'hud-bomb' : 'hud-bomb hud-bomb--empty';
+      } else {
+        this.bombEl.textContent = '';
+      }
+      this.lastBombCharges = bombCharges;
     }
     const showPerf =
       config.debug.fpsOverlay ||

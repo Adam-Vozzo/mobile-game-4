@@ -31,6 +31,20 @@ import { length } from '../engine/math';
 
 const SHAKE_DECAY = 8;
 
+/**
+ * Pure helper: returns 1 if a bomb charge should be awarded this tick, else
+ * returns the existing `charges`. Separated for testability.
+ */
+export function checkBombRecharge(
+  charges: number,
+  mult: number,
+  prevMult: number,
+  threshold: number,
+): number {
+  if (charges >= 1 || mult < threshold || prevMult >= threshold) return charges;
+  return 1;
+}
+
 const SLOW_MO_SCALE = 0.15;
 const SLOW_MO_DURATION = 1.5;
 const SLOW_MO_MULT_THRESHOLD = 5;
@@ -84,6 +98,8 @@ export class World {
   readonly dangerCloseRing: DangerCloseRing;
   readonly score = new ScoreState();
   dangerActive = false;
+  bombCharges = 0;
+  private _bombMultPrev = 0;
   readonly director = new SpawnDirector();
 
   lives: number = config.flow.startingLives;
@@ -206,6 +222,8 @@ export class World {
     this.hitFlashFx.clear();
     this.dangerCloseRing.clear();
     this.dangerActive = false;
+    this.bombCharges = config.flow.bomb ? 1 : 0;
+    this._bombMultPrev = 0;
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -414,6 +432,12 @@ export class World {
     this.hitFlashFx.step(dt);
     if (config.juice.surgeIndicator) {
       this.surgeGlow.step(dt, this.renderer.viewport);
+    }
+
+    if (config.flow.bomb) {
+      const mult = this.score.multiplier;
+      this.bombCharges = checkBombRecharge(this.bombCharges, mult, this._bombMultPrev, config.flow.bombChargeThreshold);
+      this._bombMultPrev = mult;
     }
   }
 
@@ -1102,6 +1126,54 @@ export class World {
       }
     } else {
       this.invincTimer = INVINC_DURATION;
+    }
+  }
+
+  /** Instantly destroys all alive enemies, scoring each at current multiplier. */
+  detonateBomb(): void {
+    if (!config.flow.bomb || this.bombCharges <= 0 || this.gameState !== 'playing') return;
+    this.bombCharges--;
+
+    // Nova flash — bright white, longer than a normal kill flash.
+    this.flash.flash(0xffffff, 0.85, 0.55);
+    this.shakeAmp = Math.max(this.shakeAmp, 30 * config.juice.screenShakeIntensity);
+
+    const ps = this.player.state;
+
+    // Kill all enemy types (backward traversal preserves indices under swap-remove).
+    for (let i = this.wanderers.count - 1; i >= 0; i--) {
+      const e = this.wanderers.pool.items[i]!;
+      this.killWanderer(i, e.x, e.y);
+    }
+    for (let i = this.grunts.count - 1; i >= 0; i--) {
+      const e = this.grunts.pool.items[i]!;
+      this.killGrunt(i, e.x, e.y);
+    }
+    for (let i = this.weavers.count - 1; i >= 0; i--) {
+      const e = this.weavers.pool.items[i]!;
+      this.killWeaver(i, e.x, e.y);
+    }
+    for (let i = this.blackHoles.count - 1; i >= 0; i--) {
+      const e = this.blackHoles.pool.items[i]!;
+      this.killBlackHole(i, e.x, e.y);
+    }
+    // Kill splitters before shards so newly spawned shards are also cleared below.
+    for (let i = this.splitters.count - 1; i >= 0; i--) {
+      const e = this.splitters.pool.items[i]!;
+      this.killSplitter(i, e.x, e.y, ps.x, ps.y);
+    }
+    for (let i = this.snakes.count - 1; i >= 0; i--) {
+      const e = this.snakes.pool.items[i]!;
+      this.killSnake(i, e.x, e.y);
+    }
+    for (let i = this.pinwheels.count - 1; i >= 0; i--) {
+      const e = this.pinwheels.pool.items[i]!;
+      this.killPinwheel(i, e.x, e.y);
+    }
+    // Shards last — includes any spawned by splitters above.
+    for (let i = this.shards.count - 1; i >= 0; i--) {
+      const e = this.shards.pool.items[i]!;
+      this.killShard(i, e.x, e.y);
     }
   }
 
