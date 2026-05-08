@@ -29,6 +29,7 @@ const killEvent = (overrides: Partial<{
   x: number; y: number; r: number; g: number; b: number; pointValue: number; multiplier: number;
 }> = {}) => ({
   x: 100, y: 200, r: 1, g: 0.17, b: 0.84, pointValue: 25, multiplier: 1,
+  enemyType: 'wanderer' as const,
   ...overrides,
 });
 

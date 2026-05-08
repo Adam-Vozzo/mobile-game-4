@@ -127,6 +127,10 @@ export function buildRegistry(): readonly Tweak[] {
   reg.push(toggle('audio', 'audio.musicEnabled', 'Procedural music (128 BPM synthwave)', true));
   reg.push(slider('audio', 'audio.musicVolume', 'Music volume', 0, 1, 0.05));
   reg.push(toggle('audio', 'audio.musicReactivity', 'Music-reactive grid + particles', true));
+  const killVariationTweak = toggle('audio', 'audio.enemyKillVariation', 'Per-enemy kill sounds', true);
+  killVariationTweak.description =
+    'Each enemy type plays a distinct synth voice on death instead of the generic kill sound. Grunt = heavy thud, Weaver = bright chirp, Splitter = double-pop, Shard = tiny click, Snake = downward glide, Black Hole = sub-bass implosion, Pinwheel = whirry click.';
+  reg.push(killVariationTweak);
 
   // FLOW
   reg.push(slider('flow', 'flow.spawnRateMultiplier', 'Spawn rate', 0.25, 3, 0.05));

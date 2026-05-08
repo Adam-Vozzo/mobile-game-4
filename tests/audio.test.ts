@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AudioBus } from '../src/audio/bus';
 import { events } from '../src/engine/events';
+import type { EnemyType } from '../src/engine/events';
 import { config } from '../src/config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,7 +40,12 @@ function makeAudioStub() {
     createOscillator: vi.fn(makeOsc),
     createBiquadFilter: vi.fn(() => ({
       type: 'highpass',
-      frequency: { value: 0 },
+      frequency: {
+        value: 0,
+        setValueAtTime: vi.fn(),
+        exponentialRampToValueAtTime: vi.fn(),
+      },
+      Q: { value: 1 },
       connect: vi.fn(),
     })),
     createBuffer: vi.fn(() => buffer),
@@ -105,7 +111,7 @@ describe('AudioBus', () => {
     const bus = new AudioBus();
     const teardown = bus.init();
 
-    events.emit('kill', { x: 200, y: 200, r: 1, g: 0, b: 0.8, pointValue: 25, multiplier: 1 });
+    events.emit('kill', { x: 200, y: 200, r: 1, g: 0, b: 0.8, pointValue: 25, multiplier: 1, enemyType: 'wanderer' });
 
     expect(stub.createOscillator).toHaveBeenCalled();
     expect(stub.createBuffer).toHaveBeenCalled();
@@ -165,5 +171,69 @@ describe('AudioBus', () => {
     const teardown = bus.init();
     expect(() => events.emit('shoot', { x: 0, y: 0 })).not.toThrow();
     teardown();
+  });
+
+  it('plays generic kill sound when enemyKillVariation is false', () => {
+    config.audio.enemyKillVariation = false;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    bus.init();
+    bus.playKill('grunt');
+
+    // Generic sound: sine kick + noise buffer.
+    expect(stub.createOscillator).toHaveBeenCalled();
+    expect(stub.createBuffer).toHaveBeenCalled();
+  });
+
+  it('plays varied sound when enemyKillVariation is true', () => {
+    config.audio.enemyKillVariation = true;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    bus.init();
+    bus.playKill('grunt');
+
+    // Grunt: heavy sine sub-kick + lowpass noise.
+    expect(stub.createOscillator).toHaveBeenCalled();
+    expect(stub.createBuffer).toHaveBeenCalled();
+    config.audio.enemyKillVariation = false;
+  });
+
+  const allEnemyTypes: EnemyType[] = [
+    'wanderer', 'grunt', 'weaver', 'splitter', 'shard', 'snake', 'blackHole', 'pinwheel',
+  ];
+
+  it.each(allEnemyTypes)('playKill(%s) does not throw with variation enabled', (type) => {
+    config.audio.enemyKillVariation = true;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    bus.init();
+    expect(() => bus.playKill(type)).not.toThrow();
+    config.audio.enemyKillVariation = false;
+  });
+
+  it('kill event carries enemyType through to playKill', () => {
+    config.audio.enemyKillVariation = true;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    const teardown = bus.init();
+
+    // Black hole: sub-bass heavy — should call createOscillator twice (sub + mid).
+    stub.createOscillator.mockClear();
+    events.emit('kill', {
+      x: 0, y: 0, r: 0.67, g: 0, b: 1, pointValue: 200, multiplier: 2,
+      enemyType: 'blackHole',
+    });
+    expect(stub.createOscillator.mock.calls.length).toBeGreaterThanOrEqual(2);
+
+    teardown();
+    config.audio.enemyKillVariation = false;
   });
 });

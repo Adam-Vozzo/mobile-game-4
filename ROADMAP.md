@@ -110,8 +110,8 @@ change.
   feedback gets appended automatically.
 - PROMOTE/DEMOTE pass: promote well-liked experimental toggles to
   default-on once playtest data arrives.
-- Polish: per-enemy kill sound variation (pitch shift or timbre per type).
-- Polish: per-enemy kill sound variation (pitch shift or timbre per type).
+- **Polish: per-enemy kill sound variation.** ✅ Landed in v0.25.0. Eight
+  distinct synth voices behind `audio.enemyKillVariation` experimental toggle.
 
 ## Later
 
