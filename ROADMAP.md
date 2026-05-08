@@ -76,14 +76,20 @@ change.
   fades over 380 ms with additive blend. Fires on the same tick as hitstop.
   `juice.hitstopDistortion` experimental toggle.
 
+- **Iteration 20: Player Hit Shockwave.** ✅ Landed in v0.20.0.
+  Large cyan shockwave ring at the collision point when the player is hit.
+  Ring radius scales with danger — 160 + 45 px per life already lost, so
+  the final hit pulses largest. Fades over 550 ms with additive blend.
+  `juice.playerDeathShockwave` experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - PROMOTE/DEMOTE pass: promote well-liked experimental toggles to
   default-on once playtest data arrives.
-- Polish: player death shockwave (larger ring burst on player hit, scaled to
-  remaining lives).
+- Polish: screen-edge vignette that pulses red when at low health (persistent
+  danger indicator distinct from the per-hit flash).
 
 ## Later
 

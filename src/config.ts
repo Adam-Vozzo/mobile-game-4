@@ -172,6 +172,8 @@ export interface AppConfig {
     scorePopups: boolean;
     /** Expanding radial shockwave ring at each kill point, synced to the hitstop freeze frame (experimental). */
     hitstopDistortion: boolean;
+    /** Large cyan shockwave ring emanating from the player's collision point on hit. Ring size scales with lives lost (experimental). */
+    playerDeathShockwave: boolean;
   };
 
   grid: {
@@ -244,7 +246,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.18.0',
+  buildVersion: '0.20.0',
 
   world: {
     width: 1600,
@@ -367,6 +369,7 @@ const _DEFAULTS: AppConfig = {
     comboCounter: false,
     scorePopups: false,
     hitstopDistortion: false,
+    playerDeathShockwave: false,
   },
 
   grid: {
