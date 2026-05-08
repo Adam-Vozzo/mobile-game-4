@@ -178,6 +178,8 @@ export interface AppConfig {
     dangerVignette: boolean;
     /** Ghost afterimage trail behind the player ship — fades over ~360 ms (experimental). */
     playerTrail: boolean;
+    /** Short additive streak behind each bullet indicating velocity direction (experimental). */
+    bulletTracers: boolean;
   };
 
   grid: {
@@ -376,6 +378,7 @@ const _DEFAULTS: AppConfig = {
     playerDeathShockwave: false,
     dangerVignette: false,
     playerTrail: false,
+    bulletTracers: false,
   },
 
   grid: {

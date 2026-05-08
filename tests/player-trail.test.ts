@@ -106,7 +106,7 @@ describe('fx/player-trail', () => {
     const snapshots = (trail as unknown as { snapshots: unknown[] }).snapshots;
     if (snapshots.length >= 2) {
       // ghost[0] = oldest (lowest alpha), ghost[n-1] = newest (highest alpha)
-      expect(ghosts[snapshots.length - 1].alpha).toBeGreaterThan(ghosts[0].alpha);
+      expect(ghosts[snapshots.length - 1]!.alpha).toBeGreaterThan(ghosts[0]!.alpha);
     }
   });
 
@@ -168,10 +168,10 @@ describe('fx/player-trail', () => {
     const snapshots = (trail as unknown as { snapshots: Array<{ x: number; y: number; rot: number }> }).snapshots;
     const ghosts = (trail as unknown as { ghosts: Array<{ x: number; y: number; rotation: number }> }).ghosts;
     if (snapshots.length > 0) {
-      const snap = snapshots[0];
-      expect(ghosts[0].x).toBe(snap.x);
-      expect(ghosts[0].y).toBe(snap.y);
-      expect(ghosts[0].rotation).toBe(snap.rot);
+      const snap = snapshots[0]!;
+      expect(ghosts[0]!.x).toBe(snap.x);
+      expect(ghosts[0]!.y).toBe(snap.y);
+      expect(ghosts[0]!.rotation).toBe(snap.rot);
     }
   });
 });
