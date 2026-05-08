@@ -2,6 +2,55 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.21.0 — Iteration 21: Danger Vignette (2026-05-08)
+
+**Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next
+explicitly lists "screen-edge vignette that pulses red when at low health" as
+the top Polish item.
+
+**What:**
+- `DangerVignette` class in `src/fx/danger-vignette.ts`.
+  - Takes `lives` and `vp` each frame via `step(dt, lives, vp)` — no event
+    subscription needed; world.ts passes current lives directly.
+  - Active when `config.juice.dangerVignette && lives === 1`.
+  - Intensity rises at 2.5×/s, decays at 2.0×/s — slow ominous fade-in,
+    quick fade-out when the condition changes.
+  - Pulse: half-rectified sine squared at 1.5 Hz (`raw = max(0, sin(phase))`,
+    `pulse = raw²`) — sharp beat peaks with clear silence between them.
+    Distinct from the surge glow's 2.5 Hz continuous sine.
+  - Alpha range: 0.12 (baseline) to 0.58 (peak) × intensity.
+  - Color: `0xff0030` (deep crimson) — distinct from orange surge (`0xff3300`)
+    and magenta enemies (`0xff2bd6`).
+  - Edge width 48 px (wider than surge's 36 px — more oppressive feel).
+  - Additive blend, screen-edge strips only — never obscures play area.
+  - Viewport-change guard: geometry only redrawn when `vp.width/height` changes.
+  - `clear()` on reset. No destroy() needed — no event subscriptions.
+- Config: `juice.dangerVignette` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge, description
+  explaining 1-life trigger and fade behaviour.
+- Integrated into `world.ts`:
+  - `dangerVignette.step(dt, this.lives, this.renderer.viewport)` added to all
+    three code paths (death-cam, hitstop-pause, normal playing loop).
+  - During death-cam `this.lives === 0` so the vignette decays naturally,
+    adding a subtle red fade-out alongside the particle burst.
+  - `dangerVignette.clear()` on reset.
+- 9 new tests in `tests/danger-vignette.test.ts`: starts invisible, toggle off
+  keeps invisible, full lives → invisible, 2 lives → invisible, 1 life + toggle
+  → visible, intensity rises gradually, intensity decays on lives recovery,
+  clear() hides + zeroes intensity, viewport redraw guard.
+- Total: **164 tests, all passing** (was 155).
+- Bundle: 25.25 KB gzip (was 24.92 KB; +0.33 KB).
+
+**Risks:**
+- The "danger at 1 life" threshold is fixed — doesn't adapt to the
+  `startingLives` config slider. With 9 starting lives a player could be at
+  2/9 and not see the vignette. This is intentional conservatism; the vignette
+  is most meaningful at the absolute last-life edge. If feedback shows the
+  threshold should scale, update the `lives === 1` check to
+  `lives === 1 || lives / config.flow.startingLives <= 0.34` or similar.
+
+**Toggles added:** `juice.dangerVignette` (experimental, default off).
+
 ## 0.20.0 — Iteration 20: Player Hit Shockwave (2026-05-08)
 
 **Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next explicitly

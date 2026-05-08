@@ -82,14 +82,21 @@ change.
   the final hit pulses largest. Fades over 550 ms with additive blend.
   `juice.playerDeathShockwave` experimental toggle.
 
+- **Iteration 21: Danger Vignette.** ✅ Landed in v0.21.0.
+  Crimson screen-edge glow that slowly pulses (1.5 Hz, half-rectified sine²)
+  when the player is on their last life. Distinct from the orange surge glow
+  (colour, speed, trigger) and the per-hit flash (persistent). Fades in
+  ominously, decays on death-cam. `juice.dangerVignette` experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - PROMOTE/DEMOTE pass: promote well-liked experimental toggles to
   default-on once playtest data arrives.
-- Polish: screen-edge vignette that pulses red when at low health (persistent
-  danger indicator distinct from the per-hit flash).
+- Polish: trail / ghost afterimage on player movement (motion blur feel at
+  high speed).
+- Polish: per-enemy kill sound variation (pitch shift or timbre per type).
 
 ## Later
 

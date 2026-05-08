@@ -174,6 +174,8 @@ export interface AppConfig {
     hitstopDistortion: boolean;
     /** Large cyan shockwave ring emanating from the player's collision point on hit. Ring size scales with lives lost (experimental). */
     playerDeathShockwave: boolean;
+    /** Crimson screen-edge vignette that pulses when the player is on their last life (experimental). */
+    dangerVignette: boolean;
   };
 
   grid: {
@@ -246,7 +248,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.20.0',
+  buildVersion: '0.21.0',
 
   world: {
     width: 1600,
@@ -370,6 +372,7 @@ const _DEFAULTS: AppConfig = {
     scorePopups: false,
     hitstopDistortion: false,
     playerDeathShockwave: false,
+    dangerVignette: false,
   },
 
   grid: {

@@ -17,6 +17,7 @@ import { SurgeGlow } from '../fx/surge-glow';
 import { CameraPunch } from '../fx/camera-punch';
 import { HitstopDistortion } from '../fx/hitstop-distortion';
 import { PlayerDeathShockwave } from '../fx/player-death-shockwave';
+import { DangerVignette } from '../fx/danger-vignette';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -72,6 +73,7 @@ export class World {
   readonly cameraPunch: CameraPunch;
   readonly distortion: HitstopDistortion;
   readonly deathShockwave: PlayerDeathShockwave;
+  readonly dangerVignette: DangerVignette;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -113,6 +115,7 @@ export class World {
     this.cameraPunch = new CameraPunch(this.player.state);
     this.distortion = new HitstopDistortion(renderer.layers.overlay);
     this.deathShockwave = new PlayerDeathShockwave(renderer.layers.overlay);
+    this.dangerVignette = new DangerVignette(renderer.layers.overlay);
 
     events.on('musicBeat', ({ isKick }) => {
       if (!config.audio.musicReactivity) return;
@@ -182,6 +185,7 @@ export class World {
     this.cameraPunch.clear();
     this.distortion.clear();
     this.deathShockwave.clear();
+    this.dangerVignette.clear();
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -208,6 +212,7 @@ export class World {
       this.flash.step(dt);
       this.distortion.step(dt);
       this.deathShockwave.step(dt);
+      this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -222,6 +227,7 @@ export class World {
       this.flash.step(dt);
       this.distortion.step(dt);
       this.deathShockwave.step(dt);
+      this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -370,6 +376,7 @@ export class World {
     this.flash.step(dt);
     this.distortion.step(dt);
     this.deathShockwave.step(dt);
+    this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
     if (config.juice.surgeIndicator) {
       this.surgeGlow.step(dt, this.renderer.viewport);
     }
