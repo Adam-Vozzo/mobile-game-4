@@ -82,4 +82,39 @@ describe('game/score', () => {
     expect(s.multiplier).toBe(1);
     expect(s.score).toBe(30); // score preserved
   });
+
+  it('onKillBonus increments multiplier by +1', () => {
+    const s = new ScoreState();
+    s.onKill(10); // mult still 1 (first kill)
+    expect(s.multiplier).toBe(1);
+    s.onKillBonus();
+    expect(s.multiplier).toBe(2);
+  });
+
+  it('onKillBonus caps at config.max', () => {
+    const s = new ScoreState();
+    config.score.multiplier.max = 3;
+    s.onKill(1);
+    s.step(0.1);
+    s.onKill(1); // mult 2
+    s.onKillBonus(); // mult 3
+    s.onKillBonus(); // still 3 — capped
+    expect(s.multiplier).toBeLessThanOrEqual(3);
+  });
+
+  it('onKillBonus updates peakMultiplier', () => {
+    const s = new ScoreState();
+    s.onKill(1);
+    expect(s.peakMultiplier).toBe(1);
+    s.onKillBonus();
+    expect(s.peakMultiplier).toBe(2);
+  });
+
+  it('onKillBonus does not change score', () => {
+    const s = new ScoreState();
+    s.onKill(10); // score 10
+    const scoreBefore = s.score;
+    s.onKillBonus();
+    expect(s.score).toBe(scoreBefore);
+  });
 });

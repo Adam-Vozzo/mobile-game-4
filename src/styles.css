@@ -409,6 +409,35 @@ canvas {
   font-family: 'SF Mono', Menlo, Consolas, monospace;
 }
 
+/* ─── Danger Close LURE button ──────────────────────────────────────── */
+.lure-btn {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 8px);
+  left: 8px;
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  background: rgba(255, 43, 214, 0.12);
+  border: 1.5px solid rgba(255, 43, 214, 0.55);
+  color: rgba(255, 255, 102, 0.9);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  z-index: 998;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  display: none;
+}
+.lure-btn:active {
+  background: rgba(255, 43, 214, 0.35);
+  border-color: rgba(255, 255, 102, 0.8);
+  color: #ffff66;
+  box-shadow: 0 0 14px rgba(255, 43, 214, 0.6);
+}
+
 /* ─── Game-over overlay ─────────────────────────────────────────────── */
 
 #game-over {

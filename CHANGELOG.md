@@ -2,6 +2,78 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.26.0 — Iteration 26: Danger Close — Risk Modifier (2026-05-08)
+
+**Choice: FEATURE** — No feedback to address, no bugs, no open PRs. No STABILISE in last 10.
+Design Pillar 5 ("Score multiplier as primary progression hook, risk/reward tension") had no
+voluntary risk lever yet — all difficulty so far is imposed by the spawn director.
+Danger Close adds a player-controlled risk dial: pull enemies faster toward yourself for
+a multiplier reward. Taken from the Ideas pool ("Risk modifier: voluntary danger-close
+multiplier boost").
+
+**What:**
+- `flow.dangerClose: boolean` (default false) and `flow.dangerCloseSpeedMult: number`
+  (default 1.7) added to `AppConfig`. Both registered in the Tweaks Menu under Game flow,
+  experimental badge.
+- `DangerCloseRing` class in `src/fx/danger-close-ring.ts`.
+  - Two `Graphics` objects in additive blend: a wide magenta halo (6 px, 0xff2bd6) and
+    a thin hot-yellow core ring (1.5 px, 0xffff66), both centred on the player.
+  - Phase oscillates at 3.5 Hz (PULSE_FREQ). Ring radius pulses between 50–70 px;
+    core alpha pulses between 0.4–1.0; halo alpha pulses at 0–0.3 (only on positive
+    half of cycle — flashes in time with the pulse, invisible on the dip).
+  - `step(dt, active, px, py)`: zero-cost when `active` is false (both objects remain
+    invisible). `clear()` hides both and resets phase (called on game reset).
+  - Added to `renderer.layers.overlay` so it renders above grid/vector but below the
+    game-over/menu overlays.
+- `ScoreState.onKillBonus()`: adds +1 to `mulRaw` (capped at `cfg.max`), recalculates
+  `multiplier` and updates `peakMultiplier`. Does not change score — that already happened
+  in `onKill()`. Called after every kill when Danger Close is active.
+- `World.dangerActive: boolean` (public, default false): set externally by keyboard / touch.
+  Reset to false on `world.reset()`.
+- `World.applyDangerBonus()` private helper: calls `score.onKillBonus()` iff
+  `dangerActive && config.flow.dangerClose`. Called after each of the 8 kill methods
+  (`killWanderer`, `killGrunt`, `killWeaver`, `killSplitter`, `killShard`, `killSnake`,
+  `killBlackHole`, `killPinwheel`).
+- Enemy speed: a new `esdt = sdt × dangerCloseSpeedMult` local is computed at the top
+  of the normal step path. All 8 enemy pool `step()` calls use `esdt`; bullets, player,
+  particles, grid, and the score timer keep using `sdt`. Black hole gravity also keeps
+  `sdt` (the player-pull force should not double-accelerate).
+- Input: `Shift` (left or right) on keyboard activates danger mode while held and the
+  toggle is on. A DOM `<button class="lure-btn">LURE</button>` appears bottom-left on
+  touch when the toggle is on; hidden otherwise. Both gate on `config.flow.dangerClose`
+  so the toggle being off has zero runtime cost (no ring, no speed boost, no bonus).
+  The `onConfigChanged` hook syncs button visibility when the toggle is flipped from the
+  Tweaks Menu.
+- Tweaks:
+  - `flow.dangerClose` — toggle (experimental, default off).
+  - `flow.dangerCloseSpeedMult` — slider 1.1–3.0 step 0.1 (experimental).
+- Tests: 13 new tests across `tests/danger-close-ring.test.ts` (9) and
+  `tests/score.test.ts` (+4):
+  - Ring allocates 2 Graphics; both start invisible; active=false keeps invisible;
+    active=true makes both visible; positions at (px, py); clear hides and resets phase;
+    phase advances; phase wraps within [0, 2π); hiding again after being active.
+  - `onKillBonus` increments multiplier by +1; caps at max; updates peakMultiplier;
+    does not change score.
+- Total: **221 tests, all passing** (was 208).
+- Bundle: 28.08 KB gzip (was 27.43 KB; +0.65 KB for ring class + input handlers).
+
+**Risks:**
+- `esdt` for enemy step: because `esdt` can be up to 3× `sdt`, at the slider maximum
+  (3.0×), enemy positions advance 3× as fast per sim tick. At 60 fps and `SIM_DT`
+  being a fixed small step, this is still sub-pixel per step for most enemies — no
+  tunnelling risk. The Black Hole gravity is intentionally kept at `sdt` to avoid the
+  player-pull force also tripling, which would feel unfair.
+- Multiplier chain: `onKillBonus()` is unconditional on `sinceKillMs` — it always adds
+  +1, unlike `onKill()` which only chains within `windowMs`. This makes Danger Close
+  strictly better for building multiplier but the trade-off (enemies are 70% faster and
+  the player is doing the hard work of holding the button) justifies it.
+- Touch button bottom-left: this position conflicts with the movement drag area on the
+  single-thumb-autoaim scheme. Players will accidentally trigger it. If playtesting
+  confirms this, moving it to the top-right (or making it a hold-to-activate area
+  anywhere) is a one-CSS-change fix.
+
+**Toggles added:** `flow.dangerClose` (experimental, default off), `flow.dangerCloseSpeedMult` (experimental slider).
+
 ## 0.25.0 — Iteration 25: Per-Enemy Kill Sound Variation (2026-05-08)
 
 **Choice: POLISH** — Top ROADMAP.Next polish item. No feedback to address, no
