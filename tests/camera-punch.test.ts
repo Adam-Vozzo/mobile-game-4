@@ -23,6 +23,7 @@ const KILL_25 = {
   b: 1,
   pointValue: 25,
   multiplier: 1,
+  enemyType: 'wanderer' as const,
 };
 
 const KILL_200 = {
@@ -33,6 +34,7 @@ const KILL_200 = {
   b: 1,
   pointValue: 200,
   multiplier: 1,
+  enemyType: 'wanderer' as const,
 };
 
 describe('fx/camera-punch', () => {

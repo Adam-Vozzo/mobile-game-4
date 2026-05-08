@@ -2,6 +2,59 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.25.0 — Iteration 25: Per-Enemy Kill Sound Variation (2026-05-08)
+
+**Choice: POLISH** — Top ROADMAP.Next polish item. No feedback to address, no
+bugs, no open PRs. Each enemy already has a distinct visual personality (colour,
+silhouette, movement signature); audio was the missing dimension on every kill.
+
+**What:**
+- `EnemyType` union exported from `src/engine/events.ts`:
+  `'wanderer' | 'grunt' | 'weaver' | 'splitter' | 'shard' | 'snake' | 'blackHole' | 'pinwheel'`.
+  Added as a required field on `KillEvent`.
+- All 8 `events.emit('kill', …)` calls in `world.ts` now include `enemyType`.
+- `AudioBus.playKill(enemyType)` is now public (required for direct testing).
+  When `config.audio.enemyKillVariation` is false, it plays the existing generic
+  kick+noise sound unchanged. When true, dispatches to a bespoke synth voice:
+  - **Wanderer**: generic baseline (130→38 Hz sine kick + high-passed noise).
+  - **Grunt**: heavy sub thud (80→22 Hz sine, slower decay, low-passed noise).
+  - **Weaver**: bright triangle chirp (900→2400→600 Hz, short 100 ms).
+  - **Splitter**: double-pop (two staggered 220/310 Hz sine pops + bandpass noise burst suggesting the split).
+  - **Shard**: tiny square pop (1400→300 Hz, 55 ms — disposable, not distracting).
+  - **Snake**: sinuous sawtooth glide (320→55 Hz) through a low-pass filter
+    that sweeps down simultaneously — resonant winding collapse.
+  - **Black Hole**: sub-bass implosion — sine sub (55→14 Hz, 550 ms) +
+    sawtooth mid layer (110→30 Hz) + low-passed noise rumble. Biggest sound in
+    the game, matching the biggest death explosion.
+  - **Pinwheel**: triangle spin sweep (600→120 Hz) + metallic highpass noise click.
+- Config: `audio.enemyKillVariation` (bool, default false).
+- Tweaks Menu: registered under Audio, experimental badge, description listing
+  each enemy's voice character.
+- Tests: 11 new tests in `tests/audio.test.ts`:
+  - Generic sound plays when toggle is off.
+  - Varied sound plays when toggle is on.
+  - `it.each(allEnemyTypes)` — all 8 types run without throwing.
+  - Black Hole kill event creates ≥ 2 oscillators (sub + mid layer).
+  - Updated BiquadFilter stub to include `frequency.setValueAtTime` /
+    `exponentialRampToValueAtTime` + `Q.value` (needed by snake/pinwheel sounds).
+  - Updated existing kill event test + 3 other test fixtures to include
+    `enemyType` (required field now enforced by TypeScript).
+- Total: **208 tests, all passing** (was 197).
+- Bundle: 27.43 KB gzip (was 26.43 KB; +1 KB for 8 new synth methods). Well
+  within 500 KB budget.
+
+**Risks:**
+- Black Hole implosion at 55→14 Hz with gain 0.6 can cause audible speaker
+  resonance on phone handsets not designed for sub-bass. If playtesting reports
+  "rumble/buzz on BH kill," reducing the sub gain from 0.6 → 0.35 or trimming
+  the low end to 30 Hz floor is a one-line change.
+- Splitter double-pop at 0 ms + 55 ms offset: on very fast fire rates hitting
+  multiple Splitters in the same frame, rapid-fire double-pops could feel
+  cluttered. At realistic spawn rates (max 3–4 Splitters active simultaneously)
+  this is unlikely to be noticeable.
+
+**Toggles added:** `audio.enemyKillVariation` (experimental, default off).
+
 ## 0.24.0 — Iteration 24: Enemy Hit Flash (2026-05-08)
 
 **Choice: POLISH** — No new feedback, no bugs, no open PRs. Zero STABILISE in

@@ -205,6 +205,8 @@ export interface AppConfig {
     musicVolume: number;
     sfxVolume: number;
     musicReactivity: boolean;
+    /** Distinct synth voice per enemy type on kill (experimental). */
+    enemyKillVariation: boolean;
   };
 
   flow: {
@@ -400,6 +402,7 @@ const _DEFAULTS: AppConfig = {
     musicVolume: 0.5,
     sfxVolume: 0.7,
     musicReactivity: true,
+    enemyKillVariation: false,
   },
 
   flow: {

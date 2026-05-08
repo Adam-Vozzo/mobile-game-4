@@ -4,6 +4,16 @@
  * complete", etc.
  */
 
+export type EnemyType =
+  | 'wanderer'
+  | 'grunt'
+  | 'weaver'
+  | 'splitter'
+  | 'shard'
+  | 'snake'
+  | 'blackHole'
+  | 'pinwheel';
+
 export interface KillEvent {
   x: number;
   y: number;
@@ -14,6 +24,7 @@ export interface KillEvent {
   pointValue: number;
   /** kill-chain multiplier active at the moment of the kill */
   multiplier: number;
+  enemyType: EnemyType;
 }
 
 export interface PlayerHitEvent {
