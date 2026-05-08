@@ -104,6 +104,10 @@ export function buildRegistry(): readonly Tweak[] {
   playerDeathShockwaveTweak.description =
     'Large cyan shockwave ring at the collision point when the player is hit. Ring radius scales with danger — the more lives already lost, the bigger the burst. Fades over ~550 ms.';
   reg.push(playerDeathShockwaveTweak);
+  const dangerVignetteTweak = toggle('visual', 'juice.dangerVignette', 'Danger vignette', true);
+  dangerVignetteTweak.description =
+    'Crimson screen-edge glow that pulses when you are on your last life. Persistent, distinct from the per-hit flash. Fades in slowly; fades out if lives are restored.';
+  reg.push(dangerVignetteTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));
