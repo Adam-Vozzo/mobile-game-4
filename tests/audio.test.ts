@@ -120,7 +120,7 @@ describe('AudioBus', () => {
     const bus = new AudioBus();
     const teardown = bus.init();
 
-    events.emit('playerHit', { x: 50, y: 50 });
+    events.emit('playerHit', { x: 50, y: 50, livesRemaining: 2 });
 
     expect(stub.createOscillator).toHaveBeenCalled();
 

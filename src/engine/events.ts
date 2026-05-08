@@ -19,6 +19,8 @@ export interface KillEvent {
 export interface PlayerHitEvent {
   x: number;
   y: number;
+  /** Lives remaining after this hit (already decremented). */
+  livesRemaining: number;
 }
 
 export interface ShootEvent {

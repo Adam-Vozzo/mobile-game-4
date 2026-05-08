@@ -2,6 +2,50 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.20.0 — Iteration 20: Player Hit Shockwave (2026-05-08)
+
+**Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next explicitly
+lists "player death shockwave (larger ring burst on player hit, scaled to remaining lives)"
+as the top Polish item.
+
+**What:**
+- `PlayerDeathShockwave` class in `src/fx/player-death-shockwave.ts`.
+  - Subscribes to the `playerHit` event bus.
+  - On hit: records `{x, y, maxRadius}` where `maxRadius` = `BASE_RADIUS(160) + deathsTaken * 45`.
+    `deathsTaken = config.flow.startingLives - livesRemaining`.
+    First hit of a 3-life game → 205 px max; second hit → 250 px; final hit → 295 px.
+  - Each frame: expands from radius 0 to `maxRadius` over 0.55 s. Quadratic `(1-p)²`
+    alpha falloff. Thickness shrinks from 16 px to 1 px.
+  - Color: always cyan `#00fff7` (the player's design-constitution colour).
+  - Additive blend mode — glows without obscuring gameplay.
+  - Pool cap: 6 concurrent rings; oldest dropped on overflow.
+  - `clear()` on reset. `destroy()` unsubscribes the hit listener.
+- `PlayerHitEvent` extended with `livesRemaining: number` field (already decremented).
+  All `playerHit` emitters in `world.ts` now pass `this.lives`.
+- Config: `juice.playerDeathShockwave` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge, description
+  explaining the 550 ms fade and radius scaling.
+- Integrated into `world.ts`: `deathShockwave.step(dt)` added to all three code
+  paths (death-cam, hitstop-pause, normal playing loop); `deathShockwave.clear()`
+  on reset.
+- `tests/audio.test.ts` updated with `livesRemaining: 2` on `playerHit` emit.
+- 10 new tests in `tests/player-death-shockwave.test.ts`: toggle guard, ring added
+  on hit, ring position, radius scales with lives lost, ring expiry, ring alive
+  mid-flight, clear removes all, pool cap at 6, drawCircle call count, destroy
+  unsubscribes.
+- Total: **155 tests, all passing** (was 145).
+- Bundle: 24.92 KB gzip (was 24.60 KB; +0.32 KB).
+
+**Risks:**
+- Ring position uses `ex, ey` (enemy/collision coordinates) from the event, not the
+  precise player-centre. At contact they're within one radius of each other (≤ 14 px),
+  so the visual origin is indistinguishable in motion.
+- The shockwave fires on every hit including the game-over hit. The death cam's own
+  particle burst dominates the game-over frame anyway; the shockwave adds a subtle
+  radial accent rather than competing.
+
+**Toggles added:** `juice.playerDeathShockwave` (experimental, default off).
+
 ## 0.19.0 — Iteration 19: Kill Shockwave Ring (2026-05-07)
 
 **Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next explicitly

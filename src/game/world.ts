@@ -16,6 +16,7 @@ import { ScreenFlash } from '../fx/screen-flash';
 import { SurgeGlow } from '../fx/surge-glow';
 import { CameraPunch } from '../fx/camera-punch';
 import { HitstopDistortion } from '../fx/hitstop-distortion';
+import { PlayerDeathShockwave } from '../fx/player-death-shockwave';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -70,6 +71,7 @@ export class World {
   readonly surgeGlow: SurgeGlow;
   readonly cameraPunch: CameraPunch;
   readonly distortion: HitstopDistortion;
+  readonly deathShockwave: PlayerDeathShockwave;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -110,6 +112,7 @@ export class World {
     this.surgeGlow = new SurgeGlow(renderer.layers.overlay);
     this.cameraPunch = new CameraPunch(this.player.state);
     this.distortion = new HitstopDistortion(renderer.layers.overlay);
+    this.deathShockwave = new PlayerDeathShockwave(renderer.layers.overlay);
 
     events.on('musicBeat', ({ isKick }) => {
       if (!config.audio.musicReactivity) return;
@@ -178,6 +181,7 @@ export class World {
     this.surgeGlow.clear();
     this.cameraPunch.clear();
     this.distortion.clear();
+    this.deathShockwave.clear();
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -203,6 +207,7 @@ export class World {
       this.cameraPunch.step(dt);
       this.flash.step(dt);
       this.distortion.step(dt);
+      this.deathShockwave.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -216,6 +221,7 @@ export class World {
       this.cameraPunch.step(dt);
       this.flash.step(dt);
       this.distortion.step(dt);
+      this.deathShockwave.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -363,6 +369,7 @@ export class World {
     this.score.step(sdt);
     this.flash.step(dt);
     this.distortion.step(dt);
+    this.deathShockwave.step(dt);
     if (config.juice.surgeIndicator) {
       this.surgeGlow.step(dt, this.renderer.viewport);
     }
@@ -1017,7 +1024,7 @@ export class World {
     }
     this.timeScale = 1;
     this.slowMoTimer = 0;
-    events.emit('playerHit', { x: ex, y: ey });
+    events.emit('playerHit', { x: ex, y: ey, livesRemaining: this.lives });
 
     if (this.lives <= 0) {
       // Last life — trigger dramatic death cam.

@@ -100,6 +100,10 @@ export function buildRegistry(): readonly Tweak[] {
   hitstopDistortionTweak.description =
     'Expanding radial ring at each kill position, synced to the hitstop freeze frame. Tinted to the enemy colour, fades over ~380 ms.';
   reg.push(hitstopDistortionTweak);
+  const playerDeathShockwaveTweak = toggle('visual', 'juice.playerDeathShockwave', 'Player hit shockwave', true);
+  playerDeathShockwaveTweak.description =
+    'Large cyan shockwave ring at the collision point when the player is hit. Ring radius scales with danger — the more lives already lost, the bigger the burst. Fades over ~550 ms.';
+  reg.push(playerDeathShockwaveTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));
