@@ -100,6 +100,7 @@ export class World {
   dangerActive = false;
   bombCharges = 0;
   private _bombMultPrev = 0;
+  private _dangerActivePrev = false;
   readonly director = new SpawnDirector();
 
   lives: number = config.flow.startingLives;
@@ -221,7 +222,9 @@ export class World {
     this.bulletTracers.clear();
     this.hitFlashFx.clear();
     this.dangerCloseRing.clear();
+    if (this._dangerActivePrev) events.emit('dangerChange', { active: false });
     this.dangerActive = false;
+    this._dangerActivePrev = false;
     this.bombCharges = config.flow.bomb ? 1 : 0;
     this._bombMultPrev = 0;
     this.surgeWasActive = false;
@@ -395,6 +398,10 @@ export class World {
     this.bullets.step(sdt, w, h);
     if (config.flow.dangerClose) {
       this.dangerCloseRing.step(dt, this.dangerActive, ps.x, ps.y);
+      if (this.dangerActive !== this._dangerActivePrev) {
+        this._dangerActivePrev = this.dangerActive;
+        events.emit('dangerChange', { active: this.dangerActive });
+      }
     }
 
     this.collide();
@@ -1133,6 +1140,7 @@ export class World {
   detonateBomb(): void {
     if (!config.flow.bomb || this.bombCharges <= 0 || this.gameState !== 'playing') return;
     this.bombCharges--;
+    events.emit('bombDetonate', {});
 
     // Nova flash — bright white, longer than a normal kill flash.
     this.flash.flash(0xffffff, 0.85, 0.55);

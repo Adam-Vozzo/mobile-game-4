@@ -55,6 +55,14 @@ export interface SurgeChangeEvent {
   active: boolean;
 }
 
+export interface BombDetonateEvent {
+  // payload intentionally empty; audio only needs the trigger
+}
+
+export interface DangerChangeEvent {
+  active: boolean;
+}
+
 export interface GameEvents {
   kill: KillEvent;
   playerHit: PlayerHitEvent;
@@ -62,6 +70,8 @@ export interface GameEvents {
   gameOver: GameOverEvent;
   musicBeat: MusicBeatEvent;
   surgeChange: SurgeChangeEvent;
+  bombDetonate: BombDetonateEvent;
+  dangerChange: DangerChangeEvent;
 }
 
 type Handler<E> = (e: E) => void;

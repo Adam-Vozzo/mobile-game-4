@@ -207,6 +207,10 @@ export interface AppConfig {
     musicReactivity: boolean;
     /** Distinct synth voice per enemy type on kill (experimental). */
     enemyKillVariation: boolean;
+    /** Deep bass thump + crackle on Smart Bomb detonation (experimental). */
+    bombSound: boolean;
+    /** Low-frequency tension drone while Danger Close is active (experimental). */
+    dangerCloseDrone: boolean;
   };
 
   flow: {
@@ -411,6 +415,8 @@ const _DEFAULTS: AppConfig = {
     sfxVolume: 0.7,
     musicReactivity: true,
     enemyKillVariation: false,
+    bombSound: false,
+    dangerCloseDrone: false,
   },
 
   flow: {
