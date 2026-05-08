@@ -2,6 +2,55 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.28.0 — Iteration 28: Bomb Sound + Danger Close Drone (2026-05-08)
+
+**Choice: POLISH** — No feedback/bugs/open PRs. No STABILISE in last 10 (not forced). Two recently-shipped
+features (Smart Bomb, Danger Close) had no dedicated audio — both were explicitly listed in the Ideas pool.
+Addressed both in one bounded pass: bomb detonation sound and a Danger Close tension drone.
+
+**What:**
+- `audio.bombSound: boolean` (default false, experimental) — new config field + Tweaks Audio toggle.
+  When on, `bombDetonate` event triggers `playBombDetonate()` in `AudioBus`:
+  - Layer 1 (sub-bass thump): sine at 65 Hz, sweeps to 18 Hz over 0.75 s, gain 0.7 → 0.
+  - Layer 2 (mid crunch): sawtooth at 120 Hz, sweeps to 32 Hz over 0.35 s, gain 0.28 → 0.
+  - Layer 3 (high-freq crackle): two short noise bursts (0.04 s each, staggered 45 ms),
+    high-pass filtered at 5.5 kHz, gains 0.25 and 0.17 respectively.
+  Together these form a deep bass thump with a bright snap — distinct from any kill sound.
+
+- `audio.dangerCloseDrone: boolean` (default false, experimental) — new config field + Tweaks Audio toggle.
+  When on, `dangerChange` events start/stop a persistent sine oscillator at 58 Hz via
+  `startDangerDrone()` / `stopDangerDrone()`:
+  - Fade in over 60 ms on start (avoids click).
+  - Fade out over 60 ms on stop (avoids click), then oscillator stopped 80 ms later.
+  - Drone references held in `_droneOsc` / `_droneGain`; `destroy()` also stops any active drone.
+
+- `BombDetonateEvent` and `DangerChangeEvent` added to `GameEvents` in `events.ts`.
+- `bombDetonate` emitted from `World.detonateBomb()` immediately after charge is decremented.
+- `dangerChange` emitted from `World.step()` when `dangerActive` transitions (detected via new
+  `_dangerActivePrev` field). Also emitted from `World.reset()` when resetting from active state,
+  so the drone is never left running across a game restart.
+
+### Tests
+- 7 new tests in `tests/audio.test.ts`: config defaults for both toggles; bomb sound fires with
+  `bombSound=true`, suppressed with `bombSound=false`; drone starts an oscillator with toggle on,
+  skips it with toggle off; `destroy()` stops an active drone.
+- Total: **240 tests passing** (was 233).
+
+### Risks
+- Drone fade-out uses `linearRampToValueAtTime` after `cancelScheduledValues` — this is the
+  standard Web Audio pattern but depends on `currentTime` at the moment of cancellation.
+  If `ctx.currentTime` advances rapidly (e.g. tab resumed after suspension), the ramp window
+  might be already past; the oscillator will stop after 80 ms regardless.
+- Bomb sound layers are slightly louder than a kill sound (sub-bass gain 0.7 vs 0.6 for
+  Black Hole). Adjust `sfxVolume` slider if mix feels imbalanced.
+- Neither toggle is on by default — no change to existing audio behaviour for sessions that
+  haven't opted in.
+
+**Toggles added:** `audio.bombSound` (experimental, default off), `audio.dangerCloseDrone` (experimental, default off).
+
+### Bundle
+- index.js: 29.43 KB gz (was 28.79 KB; +0.64 KB). Well within 500 KB budget.
+
 ## 0.27.0 — Iteration 27: Smart Bomb (2026-05-08)
 
 **Choice: FEATURE** — No feedback to address, no bugs, no open PRs. No STABILISE in last 10.

@@ -131,6 +131,14 @@ export function buildRegistry(): readonly Tweak[] {
   killVariationTweak.description =
     'Each enemy type plays a distinct synth voice on death instead of the generic kill sound. Grunt = heavy thud, Weaver = bright chirp, Splitter = double-pop, Shard = tiny click, Snake = downward glide, Black Hole = sub-bass implosion, Pinwheel = whirry click.';
   reg.push(killVariationTweak);
+  const bombSoundTweak = toggle('audio', 'audio.bombSound', 'Bomb detonation sound', true);
+  bombSoundTweak.description =
+    'Plays a layered sub-bass thump + mid crunch + high-frequency crackle when the Smart Bomb detonates. Requires flow.bomb to be on.';
+  reg.push(bombSoundTweak);
+  const dangerDroneTweak = toggle('audio', 'audio.dangerCloseDrone', 'Danger Close tension drone', true);
+  dangerDroneTweak.description =
+    'A low-frequency sine drone (~58 Hz) while Danger Close is held, reinforcing the tension of the risk modifier. Requires flow.dangerClose to be on.';
+  reg.push(dangerDroneTweak);
 
   // FLOW
   reg.push(slider('flow', 'flow.spawnRateMultiplier', 'Spawn rate', 0.25, 3, 0.05));

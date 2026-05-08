@@ -120,6 +120,10 @@ change.
   all on-screen enemies, scoring each at current multiplier. Recharges at ×8 multiplier.
   `flow.bomb` experimental toggle + `flow.bombChargeThreshold` slider.
 
+- **Polish: Bomb sound + Danger Close drone.** ✅ Landed in v0.28.0. Sub-bass thump
+  + crackle on bomb detonation (`audio.bombSound` experimental toggle); low-frequency
+  tension sine drone while Danger Close is held (`audio.dangerCloseDrone` experimental toggle).
+
 ## Later
 
 - Second mode (probably Pacifism or Sequence).
@@ -134,6 +138,6 @@ change.
 - Per-kill camera punch synced to drum hits.
 - Danger Close touch button refinement — bottom-left conflicts with movement drag; try top-right or hold-anywhere.
 - Danger Close visual escalation — ring colour shifts yellow→orange→red as speed multiplier increases.
-- Danger Close audio cue — a low drone/heartbeat SFX while active to reinforce tension.
+- Danger Close audio cue — a low drone/heartbeat SFX while active to reinforce tension. ✅ Landed in v0.28.0.
 - Bomb visual escalation — screen-edge crackling arc effect on the detonation frame.
-- Bomb sound — deep bass thump + high-frequency crackle on detonation.
+- Bomb sound — deep bass thump + high-frequency crackle on detonation. ✅ Landed in v0.28.0.

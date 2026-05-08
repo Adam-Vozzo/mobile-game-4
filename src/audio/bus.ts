@@ -16,16 +16,25 @@ export class AudioBus {
   private masterGain: GainNode | null = null;
   private readonly unsubs: Array<() => void> = [];
 
+  // Persistent nodes for the Danger Close drone.
+  private _droneOsc: OscillatorNode | null = null;
+  private _droneGain: GainNode | null = null;
+
   /** Call once at boot. Returns teardown fn. */
   init(): () => void {
     const offShoot = events.on('shoot', () => this.playShoot());
     const offKill = events.on('kill', (e) => this.playKill(e.enemyType));
     const offHit = events.on('playerHit', () => this.playPlayerHit());
-    this.unsubs.push(offShoot, offKill, offHit);
+    const offBomb = events.on('bombDetonate', () => this.playBombDetonate());
+    const offDanger = events.on('dangerChange', (e) =>
+      e.active ? this.startDangerDrone() : this.stopDangerDrone(),
+    );
+    this.unsubs.push(offShoot, offKill, offHit, offBomb, offDanger);
     return () => this.destroy();
   }
 
   destroy(): void {
+    this.stopDangerDrone();
     for (const u of this.unsubs) u();
     this.unsubs.length = 0;
     if (this.ctx) {
@@ -399,6 +408,105 @@ export class AudioBus {
 
     osc.start(t);
     osc.stop(t + 0.4);
+  }
+
+  // Bomb detonation: sub-bass thump + mid crunch + high-freq crackle.
+  private playBombDetonate(): void {
+    if (!config.audio.bombSound) return;
+    const r = this.getCtx();
+    if (!r) return;
+    const { ctx, master } = r;
+    const t = ctx.currentTime;
+
+    // Sub-bass thump — very low, long, massive.
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(65, t);
+    sub.frequency.exponentialRampToValueAtTime(18, t + 0.75);
+    subGain.gain.setValueAtTime(0.7, t);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+    sub.connect(subGain);
+    subGain.connect(master);
+    sub.start(t);
+    sub.stop(t + 0.85);
+
+    // Mid crunch — sawtooth sweep.
+    const mid = ctx.createOscillator();
+    const midGain = ctx.createGain();
+    mid.type = 'sawtooth';
+    mid.frequency.setValueAtTime(120, t);
+    mid.frequency.exponentialRampToValueAtTime(32, t + 0.35);
+    midGain.gain.setValueAtTime(0.28, t);
+    midGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    mid.connect(midGain);
+    midGain.connect(master);
+    mid.start(t);
+    mid.stop(t + 0.38);
+
+    // High-frequency crackle — two rapid short noise bursts.
+    for (let i = 0; i < 2; i++) {
+      const delay = i * 0.045;
+      const bufLen = Math.ceil(ctx.sampleRate * 0.04);
+      const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buf;
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 5500;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.25 - i * 0.08, t + delay);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.04);
+      noise.connect(hp);
+      hp.connect(ng);
+      ng.connect(master);
+      noise.start(t + delay);
+      noise.stop(t + delay + 0.05);
+    }
+  }
+
+  // Low-frequency tension drone active while Danger Close is held.
+  private startDangerDrone(): void {
+    if (!config.audio.dangerCloseDrone) return;
+    const r = this.getCtx();
+    if (!r) return;
+    const { ctx, master } = r;
+
+    // Stop any existing drone first.
+    this.stopDangerDrone();
+
+    const t = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 58;
+
+    // Fade in quickly to avoid click.
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.06);
+
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(t);
+
+    this._droneOsc = osc;
+    this._droneGain = gain;
+  }
+
+  private stopDangerDrone(): void {
+    if (!this._droneOsc || !this._droneGain || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    // Fade out to avoid click before stopping.
+    this._droneGain.gain.cancelScheduledValues(t);
+    this._droneGain.gain.setValueAtTime(this._droneGain.gain.value, t);
+    this._droneGain.gain.linearRampToValueAtTime(0.001, t + 0.06);
+    const osc = this._droneOsc;
+    this._droneOsc = null;
+    this._droneGain = null;
+    osc.stop(t + 0.08);
   }
 }
 

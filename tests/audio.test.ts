@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AudioBus } from '../src/audio/bus';
 import { events } from '../src/engine/events';
 import type { EnemyType } from '../src/engine/events';
-import { config } from '../src/config';
+import { config, DEFAULTS } from '../src/config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Globals = typeof globalThis & { AudioContext?: any };
@@ -10,9 +10,11 @@ type Globals = typeof globalThis & { AudioContext?: any };
 function makeAudioStub() {
   const makeGain = () => ({
     gain: {
-      value: 1,
+      value: 0.18,
       setValueAtTime: vi.fn(),
       exponentialRampToValueAtTime: vi.fn(),
+      linearRampToValueAtTime: vi.fn(),
+      cancelScheduledValues: vi.fn(),
     },
     connect: vi.fn(),
   });
@@ -235,5 +237,105 @@ describe('AudioBus', () => {
 
     teardown();
     config.audio.enemyKillVariation = false;
+  });
+
+  // --- Bomb sound ---
+
+  it('audio.bombSound defaults to false', () => {
+    expect(DEFAULTS.audio.bombSound).toBe(false);
+  });
+
+  it('plays bomb sound when bombDetonate fires and bombSound is true', () => {
+    config.audio.bombSound = true;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    const teardown = bus.init();
+    stub.createOscillator.mockClear();
+
+    events.emit('bombDetonate', {});
+
+    // Sub + mid oscillators + noise crackle buffers.
+    expect(stub.createOscillator.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(stub.createBuffer).toHaveBeenCalled();
+
+    teardown();
+    config.audio.bombSound = false;
+  });
+
+  it('suppresses bomb sound when bombSound is false', () => {
+    config.audio.bombSound = false;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    const teardown = bus.init();
+    stub.createOscillator.mockClear();
+
+    events.emit('bombDetonate', {});
+
+    expect(stub.createOscillator.mock.calls.length).toBe(0);
+
+    teardown();
+  });
+
+  // --- Danger Close drone ---
+
+  it('audio.dangerCloseDrone defaults to false', () => {
+    expect(DEFAULTS.audio.dangerCloseDrone).toBe(false);
+  });
+
+  it('starts drone oscillator on dangerChange active=true when toggle is on', () => {
+    config.audio.dangerCloseDrone = true;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    const teardown = bus.init();
+    stub.createOscillator.mockClear();
+
+    events.emit('dangerChange', { active: true });
+
+    expect(stub.createOscillator).toHaveBeenCalledTimes(1);
+
+    teardown();
+    config.audio.dangerCloseDrone = false;
+  });
+
+  it('does not start drone when dangerCloseDrone toggle is off', () => {
+    config.audio.dangerCloseDrone = false;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    const teardown = bus.init();
+    stub.createOscillator.mockClear();
+
+    events.emit('dangerChange', { active: true });
+
+    expect(stub.createOscillator.mock.calls.length).toBe(0);
+
+    teardown();
+  });
+
+  it('destroy() stops drone if active', () => {
+    config.audio.dangerCloseDrone = true;
+    const stub = makeAudioStub();
+    (globalThis as Globals).AudioContext = vi.fn(() => stub);
+
+    const bus = new AudioBus();
+    const teardown = bus.init();
+
+    events.emit('dangerChange', { active: true });
+
+    // Drone oscillator should have been created.
+    const oscCalls = stub.createOscillator.mock.results;
+    const droneOsc = oscCalls[oscCalls.length - 1]?.value as { stop: ReturnType<typeof vi.fn> };
+
+    teardown(); // calls destroy() which calls stopDangerDrone()
+
+    expect(droneOsc?.stop).toHaveBeenCalled();
+    config.audio.dangerCloseDrone = false;
   });
 });
