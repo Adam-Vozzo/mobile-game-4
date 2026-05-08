@@ -2,6 +2,68 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.24.0 — Iteration 24: Enemy Hit Flash (2026-05-08)
+
+**Choice: POLISH** — No new feedback, no bugs, no open PRs. Zero STABILISE in
+last 10 iterations. Top ROADMAP.Next polish item: "enemy hit flash — brief white
+flash on the enemy when a bullet connects." This is the primary hit-registration
+cue for multi-HP enemies (Splitter, Snake, Black Hole, Pinwheel), where no
+death explosion fires on non-lethal hits.
+
+**What:**
+- `EnemyHitFlash` class in `src/fx/enemy-hit-flash.ts`.
+  - Pre-allocates 16 `Graphics` objects (FLASH_CAP = 16), all with additive
+    blend mode. Geometry is redrawn per-flash call (one `drawCircle`) to
+    accommodate the different radii across enemy types.
+  - Ring buffer: `head` wraps mod 16 so the oldest slot is reused if all 16
+    are active simultaneously (impossible in practice at max enemy density, but
+    safe regardless).
+  - `flash(x, y, radius)`: if toggle is off, returns immediately (zero cost).
+    Otherwise: clear+redraw a white disc at `radius × 1.45`, position at
+    (x, y), alpha 1.0, ttl = 0.1 s. Disc radius is 1.45× the enemy radius so
+    it halos slightly beyond the enemy edge.
+  - `step(dt)`: linear alpha decay `ttl / FLASH_DURATION` — fast bright peak,
+    clean fade to invisible in exactly 100 ms. Only iterates visible slots.
+  - `clear()`: hides all slots on game reset.
+  - When toggle is off, all 16 slots remain `visible = false` — PixiJS skips
+    GPU upload for invisible objects; no frame-time cost.
+- Config: `juice.enemyHitFlash` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge, description
+  explaining the impact-point trigger and multi-HP emphasis.
+- Integrated into `world.ts`:
+  - `hitFlashFx.step(dt)` added to all three code paths (death-cam,
+    hitstop-pause, normal playing loop).
+  - `hitFlashFx.clear()` on reset.
+  - `hitFlashFx.flash()` called at every hit site:
+    - Non-lethal hits: `onSplitterDamaged`, `onSnakeDamaged`,
+      `onPinwheelDamaged`, and the Black Hole `else` branch when
+      `blackHoles.damage()` returns false.
+    - Kill events: `killWanderer`, `killGrunt`, `killWeaver`, `killShard`,
+      `killSplitter`, `killSnake`, `killBlackHole`, `killPinwheel`.
+      For 1-HP enemies the flash fires on the same tick as `releaseAt()` —
+      the enemy Graphics becomes invisible immediately, but the flash Graphics
+      is a separate object and persists for 100 ms at the kill position.
+- 11 new tests in `tests/enemy-hit-flash.test.ts`: allocates 16 slots, all
+  start invisible, toggle off blocks flash, toggle on makes slot visible, flash
+  positions slot at (x, y), alpha starts at 1.0, step hides slot after
+  duration, step decays alpha mid-flight, clear hides all, ring-buffer wraps
+  on 17th flash, drawCircle uses radius × 1.45.
+- Total: **197 tests, all passing** (was 186).
+- Bundle: 26.43 KB gzip (was 25.99 KB; +0.44 KB).
+
+**Risks:**
+- White additive disc at `radius × 1.45` with alpha 1.0 briefly covers the
+  enemy with bright white. In a dense fight this could produce a "strobing"
+  effect if many enemies are hit in the same frame. At 100 ms duration and
+  linear decay, the flash is very short. If playtesting finds it visually
+  overwhelming, reducing FLASH_DURATION to 0.06 s or FLASH_RADIUS_SCALE to
+  1.1 is a one-line change.
+- Geometry is redrawn on each `flash()` call (one `clear` + `drawCircle`).
+  At max fire rate (8 shots/s) hitting multi-HP enemies, that is ≤ 8 WebGL
+  buffer updates per second — negligible.
+
+**Toggles added:** `juice.enemyHitFlash` (experimental, default off).
+
 ## 0.23.0 — Iteration 23: Bullet Tracer Streak (2026-05-08)
 
 **Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next

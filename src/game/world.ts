@@ -20,6 +20,7 @@ import { PlayerDeathShockwave } from '../fx/player-death-shockwave';
 import { DangerVignette } from '../fx/danger-vignette';
 import { PlayerTrail } from '../fx/player-trail';
 import { BulletTracers } from '../fx/bullet-tracers';
+import { EnemyHitFlash } from '../fx/enemy-hit-flash';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -78,6 +79,7 @@ export class World {
   readonly dangerVignette: DangerVignette;
   readonly playerTrail: PlayerTrail;
   readonly bulletTracers: BulletTracers;
+  readonly hitFlashFx: EnemyHitFlash;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -124,6 +126,7 @@ export class World {
     this.distortion = new HitstopDistortion(renderer.layers.overlay);
     this.deathShockwave = new PlayerDeathShockwave(renderer.layers.overlay);
     this.dangerVignette = new DangerVignette(renderer.layers.overlay);
+    this.hitFlashFx = new EnemyHitFlash(renderer.layers.vector);
 
     events.on('musicBeat', ({ isKick }) => {
       if (!config.audio.musicReactivity) return;
@@ -196,6 +199,7 @@ export class World {
     this.dangerVignette.clear();
     this.playerTrail.clear();
     this.bulletTracers.clear();
+    this.hitFlashFx.clear();
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -225,6 +229,7 @@ export class World {
       this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
       this.playerTrail.step(dt, this.player.state);
       this.bulletTracers.step(this.bullets);
+      this.hitFlashFx.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -242,6 +247,7 @@ export class World {
       this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
       this.playerTrail.step(dt, this.player.state);
       this.bulletTracers.step(this.bullets);
+      this.hitFlashFx.step(dt);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -393,6 +399,7 @@ export class World {
     this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
     this.playerTrail.step(dt, this.player.state);
     this.bulletTracers.step(this.bullets);
+    this.hitFlashFx.step(dt);
     if (config.juice.surgeIndicator) {
       this.surgeGlow.step(dt, this.renderer.viewport);
     }
@@ -542,6 +549,8 @@ export class World {
         if (dx * dx + dy * dy <= r * r) {
           if (this.blackHoles.damage(ei)) {
             this.killBlackHole(ei, e.x, e.y);
+          } else {
+            this.hitFlashFx.flash(e.x, e.y, config.enemies.blackHole.radius);
           }
           this.bullets.releaseAt(bi);
           continue outer_w;
@@ -784,6 +793,7 @@ export class World {
     const cfg = config.enemies.blackHole;
     this.blackHoles.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.radius);
     // Massive explosion — more dramatic than any other enemy kill.
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 2.5), 0xaa00ff, 1.2, 1.4);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.0), 0xff88ff, 1.6, 0.8);
@@ -855,12 +865,14 @@ export class World {
     if (config.juice.screenFlash) {
       this.flash.flash(FLASH_SPLITTER_COLOR, 0.18, 0.08);
     }
+    this.hitFlashFx.flash(x, y, config.enemies.splitter.radius);
   }
 
   private killSplitter(i: number, x: number, y: number, playerX: number, playerY: number): void {
     const cfg = config.enemies.splitter;
     this.splitters.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.radius);
     // Dramatic split burst.
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.2), 0xffdd00, 1.1, 1.0);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.5), 0xff8800, 1.5, 0.7);
@@ -887,6 +899,7 @@ export class World {
     if (config.juice.screenFlash) {
       this.flash.flash(FLASH_SNAKE_COLOR, 0.14, 0.07);
     }
+    this.hitFlashFx.flash(x, y, config.enemies.snake.radius);
   }
 
   private onPinwheelDamaged(x: number, y: number): void {
@@ -895,12 +908,14 @@ export class World {
     if (config.juice.screenFlash) {
       this.flash.flash(FLASH_PINWHEEL_COLOR, 0.15, 0.07);
     }
+    this.hitFlashFx.flash(x, y, config.enemies.pinwheel.hubRadius);
   }
 
   private killPinwheel(i: number, x: number, y: number): void {
     const cfg = config.enemies.pinwheel;
     this.pinwheels.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.hubRadius);
     // Triple burst — hub core + outer ring + white spark.
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.5), 0xcc44ff, 1.2, 1.0);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.8), 0xee88ff, 1.8, 0.7);
@@ -925,6 +940,7 @@ export class World {
     const cfg = config.enemies.snake;
     this.snakes.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.4), 0x00ffaa, 1.1, 1.0);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.5), 0xffffff, 1.6, 0.6);
     this.grid.push(x, y, config.grid.explosionInfluence * 1.2, config.grid.influenceRadius);
@@ -947,6 +963,7 @@ export class World {
     const cfg = config.enemies.shard;
     this.shards.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.6), 0xff8800, 1.0, 0.7);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.2), 0xffffff, 1.4, 0.4);
     this.grid.push(x, y, config.grid.explosionInfluence * 0.6, config.grid.influenceRadius * 0.8);
@@ -965,6 +982,7 @@ export class World {
     const cfg = config.enemies.wanderer;
     this.wanderers.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, config.juice.particlesPerKill, 0xff2bd6, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.4), 0xffffff, 1.4, 0.6);
     this.grid.push(x, y, config.grid.explosionInfluence, config.grid.influenceRadius);
@@ -987,6 +1005,7 @@ export class World {
     const cfg = config.enemies.grunt;
     this.grunts.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.3), 0xff7700, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.4), 0xffffff, 1.5, 0.7);
     this.grid.push(x, y, config.grid.explosionInfluence * 1.3, config.grid.influenceRadius * 1.1);
@@ -1009,6 +1028,7 @@ export class World {
     const cfg = config.enemies.weaver;
     this.weavers.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, config.juice.particlesPerKill, 0xaaff00, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.3), 0xffffff, 1.6, 0.5);
     this.grid.push(x, y, config.grid.explosionInfluence * 0.9, config.grid.influenceRadius);
