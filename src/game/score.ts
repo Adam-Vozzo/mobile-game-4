@@ -45,6 +45,14 @@ export class ScoreState {
     this.score += pointValue * this.multiplier;
   }
 
+  /** Extra +1 multiplier point awarded when Danger Close is active on a kill. */
+  onKillBonus(): void {
+    const cfg = config.score.multiplier;
+    this.mulRaw = Math.min(cfg.max, this.mulRaw + 1);
+    this.multiplier = Math.floor(this.mulRaw);
+    if (this.multiplier > this.peakMultiplier) this.peakMultiplier = this.multiplier;
+  }
+
   /** dt in seconds. */
   step(dt: number): void {
     this.sinceKillMs += dt * 1000;

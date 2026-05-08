@@ -112,6 +112,9 @@ change.
   default-on once playtest data arrives.
 - **Polish: per-enemy kill sound variation.** ✅ Landed in v0.25.0. Eight
   distinct synth voices behind `audio.enemyKillVariation` experimental toggle.
+- **Feature: Danger Close — risk modifier.** ✅ Landed in v0.26.0. Hold Shift/LURE
+  to speed enemies up 70% and gain extra multiplier per kill. `flow.dangerClose`
+  experimental toggle + `flow.dangerCloseSpeedMult` slider.
 
 ## Later
 
@@ -123,7 +126,9 @@ change.
 
 ## Ideas (unranked)
 
-- Risk modifier: voluntary "danger close" multiplier boost.
-- Geometric "biomes" of enemy mixes.
+- Geometric "biomes" of enemy mixes — distinct spawn patterns per phase creating tactical variety.
 - Photo-mode / replay snapshot.
 - Per-kill camera punch synced to drum hits.
+- Danger Close touch button refinement — bottom-left conflicts with movement drag; try top-right or hold-anywhere.
+- Danger Close visual escalation — ring colour shifts yellow→orange→red as speed multiplier increases.
+- Danger Close audio cue — a low drone/heartbeat SFX while active to reinforce tension.

@@ -99,10 +99,10 @@ async function main(): Promise<void> {
   // Tweaks Menu
   const tweaks = new TweaksMenu(host, {
     onConfigChanged: () => {
-      // Hot-swap control scheme if it changed.
       if (config.controls.scheme !== controls.scheme) {
         controls.swap(config.controls.scheme, makeScheme);
       }
+      lureBtn.style.display = config.flow.dangerClose ? '' : 'none';
     },
     onOpen: () => loop.setPaused(true),
     onClose: () => loop.setPaused(false),
@@ -129,7 +129,32 @@ async function main(): Promise<void> {
       e.preventDefault();
       tweaks.toggle();
     }
+    if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && config.flow.dangerClose) {
+      world.dangerActive = true;
+    }
   });
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+      world.dangerActive = false;
+    }
+  });
+
+  // Danger Close touch button — visible only when the toggle is enabled.
+  const lureBtn = document.createElement('button');
+  lureBtn.className = 'lure-btn';
+  lureBtn.textContent = 'LURE';
+  document.body.appendChild(lureBtn);
+  const updateLureBtn = (): void => {
+    lureBtn.style.display = config.flow.dangerClose ? '' : 'none';
+  };
+  updateLureBtn();
+  lureBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    world.dangerActive = true;
+  }, { passive: false });
+  lureBtn.addEventListener('pointerup', () => { world.dangerActive = false; }, { passive: true });
+  lureBtn.addEventListener('pointercancel', () => { world.dangerActive = false; }, { passive: true });
+  lureBtn.addEventListener('pointerleave', () => { world.dangerActive = false; }, { passive: true });
 
   // Try to lock orientation on user gesture (most browsers require it).
   const tryLock = (): void => {

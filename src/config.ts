@@ -222,6 +222,10 @@ export interface AppConfig {
     snakeEnemy: boolean;
     /** Enable Pinwheel enemy — rotating hub shielded by three orbiting drones that absorb bullets (experimental). */
     pinwheelEnemy: boolean;
+    /** Danger Close — hold Shift/LURE to make enemies 70% faster; each kill grants +1 extra multiplier (experimental). */
+    dangerClose: boolean;
+    /** Speed multiplier applied to all enemies while Danger Close is active. */
+    dangerCloseSpeedMult: number;
   };
 
   spawnDirector: {
@@ -256,7 +260,7 @@ export interface AppConfig {
 }
 
 const _DEFAULTS: AppConfig = {
-  buildVersion: '0.24.0',
+  buildVersion: '0.26.0',
 
   world: {
     width: 1600,
@@ -413,6 +417,8 @@ const _DEFAULTS: AppConfig = {
     splitterEnemy: false,
     snakeEnemy: false,
     pinwheelEnemy: false,
+    dangerClose: false,
+    dangerCloseSpeedMult: 1.7,
   },
 
   spawnDirector: {

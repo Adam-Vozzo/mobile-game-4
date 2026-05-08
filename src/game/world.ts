@@ -21,6 +21,7 @@ import { DangerVignette } from '../fx/danger-vignette';
 import { PlayerTrail } from '../fx/player-trail';
 import { BulletTracers } from '../fx/bullet-tracers';
 import { EnemyHitFlash } from '../fx/enemy-hit-flash';
+import { DangerCloseRing } from '../fx/danger-close-ring';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -80,7 +81,9 @@ export class World {
   readonly playerTrail: PlayerTrail;
   readonly bulletTracers: BulletTracers;
   readonly hitFlashFx: EnemyHitFlash;
+  readonly dangerCloseRing: DangerCloseRing;
   readonly score = new ScoreState();
+  dangerActive = false;
   readonly director = new SpawnDirector();
 
   lives: number = config.flow.startingLives;
@@ -127,6 +130,7 @@ export class World {
     this.deathShockwave = new PlayerDeathShockwave(renderer.layers.overlay);
     this.dangerVignette = new DangerVignette(renderer.layers.overlay);
     this.hitFlashFx = new EnemyHitFlash(renderer.layers.vector);
+    this.dangerCloseRing = new DangerCloseRing(renderer.layers.overlay);
 
     events.on('musicBeat', ({ isKick }) => {
       if (!config.audio.musicReactivity) return;
@@ -200,6 +204,8 @@ export class World {
     this.playerTrail.clear();
     this.bulletTracers.clear();
     this.hitFlashFx.clear();
+    this.dangerCloseRing.clear();
+    this.dangerActive = false;
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -272,6 +278,9 @@ export class World {
       }
     }
     const sdt = dt * this.timeScale;
+    const esdt = this.dangerActive && config.flow.dangerClose
+      ? sdt * config.flow.dangerCloseSpeedMult
+      : sdt;
 
     const w = this.renderer.viewport.width;
     const h = this.renderer.viewport.height;
@@ -348,24 +357,27 @@ export class World {
       events.emit('shoot', { x: bx, y: by });
     }
 
-    this.wanderers.step(sdt, w, h);
-    this.grunts.step(sdt, w, h, ps.x, ps.y);
-    this.weavers.step(sdt, w, h, ps.x, ps.y);
-    this.blackHoles.step(sdt, w, h);
+    this.wanderers.step(esdt, w, h);
+    this.grunts.step(esdt, w, h, ps.x, ps.y);
+    this.weavers.step(esdt, w, h, ps.x, ps.y);
+    this.blackHoles.step(esdt, w, h);
     if (config.flow.blackHoleEnemy && this.blackHoles.count > 0) {
       this.applyBlackHoleGravity(sdt, ps);
     }
     if (config.flow.splitterEnemy) {
-      this.splitters.step(sdt, w, h);
-      this.shards.step(sdt, w, h, ps.x, ps.y);
+      this.splitters.step(esdt, w, h);
+      this.shards.step(esdt, w, h, ps.x, ps.y);
     }
     if (config.flow.snakeEnemy) {
-      this.snakes.step(sdt, w, h, ps.x, ps.y);
+      this.snakes.step(esdt, w, h, ps.x, ps.y);
     }
     if (config.flow.pinwheelEnemy) {
-      this.pinwheels.step(sdt, w, h, ps.x, ps.y);
+      this.pinwheels.step(esdt, w, h, ps.x, ps.y);
     }
     this.bullets.step(sdt, w, h);
+    if (config.flow.dangerClose) {
+      this.dangerCloseRing.step(dt, this.dangerActive, ps.x, ps.y);
+    }
 
     this.collide();
 
@@ -793,6 +805,7 @@ export class World {
     const cfg = config.enemies.blackHole;
     this.blackHoles.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.radius);
     // Massive explosion — more dramatic than any other enemy kill.
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 2.5), 0xaa00ff, 1.2, 1.4);
@@ -872,6 +885,7 @@ export class World {
     const cfg = config.enemies.splitter;
     this.splitters.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.radius);
     // Dramatic split burst.
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.2), 0xffdd00, 1.1, 1.0);
@@ -915,6 +929,7 @@ export class World {
     const cfg = config.enemies.pinwheel;
     this.pinwheels.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.hubRadius);
     // Triple burst — hub core + outer ring + white spark.
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.5), 0xcc44ff, 1.2, 1.0);
@@ -940,6 +955,7 @@ export class World {
     const cfg = config.enemies.snake;
     this.snakes.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.4), 0x00ffaa, 1.1, 1.0);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.5), 0xffffff, 1.6, 0.6);
@@ -963,6 +979,7 @@ export class World {
     const cfg = config.enemies.shard;
     this.shards.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.6), 0xff8800, 1.0, 0.7);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.2), 0xffffff, 1.4, 0.4);
@@ -982,6 +999,7 @@ export class World {
     const cfg = config.enemies.wanderer;
     this.wanderers.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, config.juice.particlesPerKill, 0xff2bd6, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.4), 0xffffff, 1.4, 0.6);
@@ -1005,6 +1023,7 @@ export class World {
     const cfg = config.enemies.grunt;
     this.grunts.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 1.3), 0xff7700, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.4), 0xffffff, 1.5, 0.7);
@@ -1028,6 +1047,7 @@ export class World {
     const cfg = config.enemies.weaver;
     this.weavers.releaseAt(i);
     this.score.onKill(cfg.pointValue);
+    this.applyDangerBonus();
     this.hitFlashFx.flash(x, y, cfg.radius);
     this.particles.burst(x, y, config.juice.particlesPerKill, 0xaaff00, 1, 1);
     this.particles.burst(x, y, Math.floor(config.juice.particlesPerKill * 0.3), 0xffffff, 1.6, 0.5);
@@ -1082,6 +1102,12 @@ export class World {
       }
     } else {
       this.invincTimer = INVINC_DURATION;
+    }
+  }
+
+  private applyDangerBonus(): void {
+    if (this.dangerActive && config.flow.dangerClose) {
+      this.score.onKillBonus();
     }
   }
 }

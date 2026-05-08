@@ -153,6 +153,11 @@ export function buildRegistry(): readonly Tweak[] {
   pinwheelTweak.description =
     'Violet rotating hub (3 HP) guarded by three orbiting drones that absorb bullets. Thread shots through the rotating gaps — or wait for a gap to rotate to you.';
   reg.push(pinwheelTweak);
+  const dcTweak = toggle('flow', 'flow.dangerClose', 'Danger Close (risk modifier)', true);
+  dcTweak.description =
+    'Hold Shift (keyboard) or the LURE button (touch) to enter danger mode: all enemies move 70% faster, but each kill grants +1 extra multiplier on top of the normal chain bonus. Hold the chaos, reap the reward.';
+  reg.push(dcTweak);
+  reg.push(slider('flow', 'flow.dangerCloseSpeedMult', 'Danger speed multiplier', 1.1, 3.0, 0.1, '×', true));
   const directorTweak = toggle('flow', 'spawnDirector.enabled', 'Spawn director', true);
   directorTweak.description =
     'Escalating pressure over 2 min — spawn rate ramps, enemy mix shifts, random surges spike intensity.';
