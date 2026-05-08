@@ -176,6 +176,8 @@ export interface AppConfig {
     playerDeathShockwave: boolean;
     /** Crimson screen-edge vignette that pulses when the player is on their last life (experimental). */
     dangerVignette: boolean;
+    /** Ghost afterimage trail behind the player ship — fades over ~360 ms (experimental). */
+    playerTrail: boolean;
   };
 
   grid: {
@@ -373,6 +375,7 @@ const _DEFAULTS: AppConfig = {
     hitstopDistortion: false,
     playerDeathShockwave: false,
     dangerVignette: false,
+    playerTrail: false,
   },
 
   grid: {

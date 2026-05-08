@@ -108,6 +108,10 @@ export function buildRegistry(): readonly Tweak[] {
   dangerVignetteTweak.description =
     'Crimson screen-edge glow that pulses when you are on your last life. Persistent, distinct from the per-hit flash. Fades in slowly; fades out if lives are restored.';
   reg.push(dangerVignetteTweak);
+  const playerTrailTweak = toggle('visual', 'juice.playerTrail', 'Player motion trail', true);
+  playerTrailTweak.description =
+    'Ghost afterimage trail behind the player ship while moving. Eight fading copies sampled every ~45 ms; trail decays over ~360 ms when the player slows or stops.';
+  reg.push(playerTrailTweak);
 
   // AUDIO
   reg.push(toggle('audio', 'audio.sfxEnabled', 'SFX enabled'));

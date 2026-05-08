@@ -18,6 +18,7 @@ import { CameraPunch } from '../fx/camera-punch';
 import { HitstopDistortion } from '../fx/hitstop-distortion';
 import { PlayerDeathShockwave } from '../fx/player-death-shockwave';
 import { DangerVignette } from '../fx/danger-vignette';
+import { PlayerTrail } from '../fx/player-trail';
 import { config } from '../config';
 import { defaultRng } from '../engine/rng';
 import { events } from '../engine/events';
@@ -74,6 +75,7 @@ export class World {
   readonly distortion: HitstopDistortion;
   readonly deathShockwave: PlayerDeathShockwave;
   readonly dangerVignette: DangerVignette;
+  readonly playerTrail: PlayerTrail;
   readonly score = new ScoreState();
   readonly director = new SpawnDirector();
 
@@ -99,6 +101,8 @@ export class World {
     };
     this.grid = new ReactiveGrid(renderer.layers.grid);
     this.grid.layout(renderer.viewport);
+    // Trail must be added to vector before Player so it renders behind the ship.
+    this.playerTrail = new PlayerTrail(renderer.layers.vector);
     this.player = new Player(renderer.layers.vector, center.x, center.y);
     this.bullets = new Bullets(renderer.layers.vector);
     this.wanderers = new Wanderers(renderer.layers.vector);
@@ -186,6 +190,7 @@ export class World {
     this.distortion.clear();
     this.deathShockwave.clear();
     this.dangerVignette.clear();
+    this.playerTrail.clear();
     this.surgeWasActive = false;
     this.renderer.app.stage.position.set(0, 0);
   }
@@ -213,6 +218,7 @@ export class World {
       this.distortion.step(dt);
       this.deathShockwave.step(dt);
       this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
+      this.playerTrail.step(dt, this.player.state);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -228,6 +234,7 @@ export class World {
       this.distortion.step(dt);
       this.deathShockwave.step(dt);
       this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
+      this.playerTrail.step(dt, this.player.state);
       if (config.juice.surgeIndicator) this.surgeGlow.step(dt, this.renderer.viewport);
       return;
     }
@@ -377,6 +384,7 @@ export class World {
     this.distortion.step(dt);
     this.deathShockwave.step(dt);
     this.dangerVignette.step(dt, this.lives, this.renderer.viewport);
+    this.playerTrail.step(dt, this.player.state);
     if (config.juice.surgeIndicator) {
       this.surgeGlow.step(dt, this.renderer.viewport);
     }
