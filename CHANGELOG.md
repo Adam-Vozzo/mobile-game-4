@@ -2,6 +2,59 @@
 
 Append-only iteration log. One concern per entry. Don't edit past entries.
 
+## 0.22.0 — Iteration 22: Player Motion Trail (2026-05-08)
+
+**Choice: POLISH** — No new feedback, no bugs, no open PRs. Zero STABILISE in
+last 10 iterations. Top ROADMAP.Next Polish item: "trail / ghost afterimage on
+player movement."
+
+**What:**
+- `PlayerTrail` class in `src/fx/player-trail.ts`.
+  - Pre-allocates 8 `Graphics` objects (TRAIL_LENGTH = 8), each drawn once
+    with `drawPlayerShip` + additive blend. No geometry regeneration per frame;
+    only `x`, `y`, `rotation`, and `alpha` are updated.
+  - Ring buffer: every 45 ms (`SAMPLE_INTERVAL`) of simulation time, if the
+    player's speed ≥ 30 px/s (`SPEED_THRESHOLD`), the current position/rotation
+    is pushed. Buffer capped at 8 entries; oldest dropped on overflow.
+  - When the player stops (speed < threshold) or is dead/blinking, the oldest
+    snapshot is shed once per sample interval so the trail fades out over
+    ≤ 360 ms.
+  - Alpha scheme: linear ramp — oldest ghost at `1/n × 0.35`, newest at
+    `n/n × 0.35 = 0.35`. This gives a natural fade from near-invisible at the
+    back to clearly visible at the front.
+  - All ghosts are hidden (`alpha = 0`) when: toggle is off, player is dead, or
+    player is blinking (invincibility window).
+  - Render ordering: `PlayerTrail` is instantiated in `World` constructor
+    **before** `Player`, so its Graphics are earlier in the vector layer display
+    list and always render behind the ship.
+  - `clear()` on game reset. No `destroy()` needed — no event subscriptions.
+- Config: `juice.playerTrail` (bool, default off).
+- Tweaks Menu: registered under Visual Juice, experimental badge, description
+  explaining the 8-ghost buffer and 360 ms fade.
+- Integrated into `world.ts`:
+  - `playerTrail.step(dt, this.player.state)` added to all three code paths
+    (death-cam, hitstop-pause, normal playing loop).
+  - `playerTrail.clear()` on reset.
+- 12 new tests in `tests/player-trail.test.ts`: allocates 8 ghosts, starts
+  invisible, toggle off blocks trail, snapshots accumulate when moving,
+  snapshot count capped at 8, no snapshots below speed threshold, newest ghost
+  alpha > oldest, clear resets all, dead player hides ghosts, blinking hides
+  ghosts, stopped player sheds snapshots, ghost position matches snapshot.
+- Total: **176 tests, all passing** (was 164).
+- Bundle: 25.66 KB gzip (was 25.25 KB; +0.41 KB).
+
+**Risks:**
+- Eight pre-allocated Graphics means 8 PixiJS objects permanently in the scene
+  graph regardless of toggle state. When the toggle is off, all are `alpha = 0`
+  and invisible — PixiJS skips the GPU upload for zero-alpha objects. Overhead
+  is negligible.
+- The 45 ms sample interval means there is always ≤ 45 ms of lag between the
+  player's visible position and the newest ghost. At typical speeds (200 px/s)
+  that's ~9 px — imperceptible at play speed, and exactly right for the
+  "afterimage" feel.
+
+**Toggles added:** `juice.playerTrail` (experimental, default off).
+
 ## 0.21.0 — Iteration 21: Danger Vignette (2026-05-08)
 
 **Choice: POLISH** — No new feedback, no bugs, no open PRs. ROADMAP.Next

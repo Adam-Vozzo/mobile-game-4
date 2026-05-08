@@ -88,15 +88,20 @@ change.
   (colour, speed, trigger) and the per-hit flash (persistent). Fades in
   ominously, decays on death-cam. `juice.dangerVignette` experimental toggle.
 
+- **Iteration 22: Player Motion Trail.** ✅ Landed in v0.22.0.
+  Eight ghost afterimages behind the player ship, sampled every 45 ms, fading
+  with a linear alpha ramp over ≤ 360 ms. Suppressed when stopped, dead, or
+  blinking. `juice.playerTrail` experimental toggle.
+
 ## Next
 
 - Wire `TWEAKS_FEEDBACK.jsonl` into a CI/repo workflow so downloaded
   feedback gets appended automatically.
 - PROMOTE/DEMOTE pass: promote well-liked experimental toggles to
   default-on once playtest data arrives.
-- Polish: trail / ghost afterimage on player movement (motion blur feel at
-  high speed).
 - Polish: per-enemy kill sound variation (pitch shift or timbre per type).
+- Polish: bullet tracer streak (short additive streak behind each bullet for
+  speed read).
 
 ## Later
 
